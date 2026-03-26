@@ -2,7 +2,6 @@ import numpy as np
 
 class outerforce:
     def __init__(self,value,place,direction):
-        """定义外力,要求`place`表示外力作用点,`direction`的值为二维向量"""
         self.place = place
         self.direction = direction
         self.fx = value * self.direction[0]
@@ -10,23 +9,35 @@ class outerforce:
 
 class outertorque:
     def __init__(self,value,place):
-        """定义外力矩,要求`place`表示外力矩作用点,以逆时针为正"""
         self.value = value
         self.place = place
 
+class fenbuforce:
+    def __init__(self,q,start,end,direction):
+        if end < start:
+            raise ValueError("分布力作用终点不能小于分布力作用起点")
+        self.length = np.linalg.norm(np.array(end) - np.array(start))
+        self.fx = q * self.length * direction[0]
+        self.fy = q * self.length * direction[1]
+        self.place = ((start[0]+end[0])/2, (start[1]+end[1])/2)
+
+class fenbutorque:
+    def __init__(self,m,start,end):
+        if end < start:
+            raise ValueError("分布力矩作用终点不能小于分布力矩作用起点")
+        self.length = np.linalg.norm(np.array(end) - np.array(start))
+        self.value = m * self.length
+        self.place = ((start[0]+end[0])/2, (start[1]+end[1])/2)
+
 class hdjzz:
     def __init__(self,place,direction):
-        """滑动铰支座,要求`place`表示铰动点,`direction`的值为二维向量,表示铰动方向"""
         self.place = place
         self.direction = direction
 
 class gdjzz:
     def __init__(self,place):
-        """固定铰支座,要求`place`表示铰动点"""
         self.place = place
-
 
 class gz:
     def __init__(self,place):
-        """固定支座,要求`place`表示支座点"""
         self.place = place

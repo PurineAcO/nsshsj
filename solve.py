@@ -22,11 +22,11 @@ class solver:
             elif type(obj) == define.hdjzz:
                 self.restrictioncnt-=1
                 self.restrictiondic["hdjzz"].append(obj)
-            elif type(obj) == define.outerforce:
+            elif type(obj) == define.outerforce or type(obj) == define.fenbuforce:
                 self.beta[0]-=obj.fx
                 self.beta[1]-=obj.fy
                 self.beta[2]-=obj.fy*obj.place[0]-obj.fx*obj.place[1]
-            elif type(obj) == define.outertorque:
+            elif type(obj) == define.outertorque or type(obj) == define.fenbutorque:
                 self.beta[2]-=obj.value
         
         if self.restrictioncnt < 0:
