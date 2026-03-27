@@ -1,12 +1,34 @@
-// 存储力学对象的列表
-let mechanicsObjects = [];
+// 单位转换函数
+function convertForceUnit(value, fromUnit) {
+    const toUnit = globalUnits.force;
+    const units = {
+        'N': 1,
+        'kN': 1000,
+        'MN': 1000000
+    };
+    return value * units[fromUnit] / units[toUnit];
+}
 
-// 全局单位设置
-let globalUnits = {
-    force: 'N',
-    torque: 'N·m',
-    length: 'm'
-};
+function convertTorqueUnit(value, fromUnit) {
+    const toUnit = globalUnits.torque;
+    const units = {
+        'N·m': 1,
+        'kN·m': 1000,
+        'MN·m': 1000000
+    };
+    return value * units[fromUnit] / units[toUnit];
+}
+
+function convertLengthUnit(value, fromUnit) {
+    const toUnit = globalUnits.length;
+    const units = {
+        'm': 1,
+        'cm': 0.01,
+        'mm': 0.001,
+        'km': 1000
+    };
+    return value * units[fromUnit] / units[toUnit];
+}
 
 // 应用全局单位
 function applyGlobalUnits() {
@@ -31,58 +53,21 @@ function applyGlobalUnits() {
 // 标签页切换事件
 document.addEventListener('DOMContentLoaded', function() {
     // 监听所有标签页切换事件（大标签页和子标签页）
-    document.addEventListener('shown.bs.tab', function(event) {
+    document.addEventListener('shown.bs.tab', function() {
         // 切换标签页后更新显示
         console.log('Tab switched, updating objects display');
         console.log('Mechanics objects count:', mechanicsObjects.length);
         displayObjects();
     });
     
+    // 预览梁按钮点击事件
+    document.getElementById('preview-beam').addEventListener('click', function() {
+        previewBeam();
+    });
+    
     // 初始显示
     displayObjects();
 });
-
-// 核心：解析坐标点
-function parsePoint(x, y) {
-    return [parseExpression(x), parseExpression(y)];
-}
-
-// 解析算式
-function parseExpression(expr) {
-    try {
-        return math.evaluate(expr);
-    } catch (e) {
-        throw new Error('算式解析错误');
-    }
-}
-
-// 转换力单位到N
-function convertForceUnit(value, unit) {
-    if (unit === 'kN') {
-        return value * 1000;
-    } else if (unit === 'MN') {
-        return value * 1000000;
-    }
-    return value;
-}
-
-// 转换力矩单位到N·m
-function convertTorqueUnit(value, unit) {
-    if (unit === 'kN·m') {
-        return value * 1000;
-    } else if (unit === 'MN·m') {
-        return value * 1000000;
-    }
-    return value;
-}
-
-// 转换长度单位到m
-function convertLengthUnit(value, unit) {
-    if (unit === 'mm') {
-        return value / 1000;
-    }
-    return value;
-}
 
 // 根据预设方向更新方向输入字段
 function setDirection(direction) {
@@ -90,100 +75,85 @@ function setDirection(direction) {
         case '+X':
             document.getElementById('force-direction-x').value = '1';
             document.getElementById('force-direction-y').value = '0';
-            break;
-        case '-X':
-            document.getElementById('force-direction-x').value = '-1';
-            document.getElementById('force-direction-y').value = '0';
-            break;
-        case '+Y':
-            document.getElementById('force-direction-x').value = '0';
-            document.getElementById('force-direction-y').value = '1';
-            break;
-        case '-Y':
-            document.getElementById('force-direction-x').value = '0';
-            document.getElementById('force-direction-y').value = '-1';
-            break;
-    }
-}
-
-// 设置分布力方向
-function setDistributedForceDirection(direction) {
-    switch (direction) {
-        case '+X':
             document.getElementById('distributed-force-direction-x').value = '1';
             document.getElementById('distributed-force-direction-y').value = '0';
-            break;
-        case '-X':
-            document.getElementById('distributed-force-direction-x').value = '-1';
-            document.getElementById('distributed-force-direction-y').value = '0';
-            break;
-        case '+Y':
-            document.getElementById('distributed-force-direction-x').value = '0';
-            document.getElementById('distributed-force-direction-y').value = '1';
-            break;
-        case '-Y':
-            document.getElementById('distributed-force-direction-x').value = '0';
-            document.getElementById('distributed-force-direction-y').value = '-1';
-            break;
-    }
-}
-
-// 设置滑动铰方向
-function setSlidingDirection(direction) {
-    switch (direction) {
-        case '+X':
             document.getElementById('sliding-hinge-direction-x').value = '1';
             document.getElementById('sliding-hinge-direction-y').value = '0';
             break;
         case '-X':
+            document.getElementById('force-direction-x').value = '-1';
+            document.getElementById('force-direction-y').value = '0';
+            document.getElementById('distributed-force-direction-x').value = '-1';
+            document.getElementById('distributed-force-direction-y').value = '0';
             document.getElementById('sliding-hinge-direction-x').value = '-1';
             document.getElementById('sliding-hinge-direction-y').value = '0';
             break;
         case '+Y':
+            document.getElementById('force-direction-x').value = '0';
+            document.getElementById('force-direction-y').value = '1';
+            document.getElementById('distributed-force-direction-x').value = '0';
+            document.getElementById('distributed-force-direction-y').value = '1';
             document.getElementById('sliding-hinge-direction-x').value = '0';
             document.getElementById('sliding-hinge-direction-y').value = '1';
             break;
         case '-Y':
+            document.getElementById('force-direction-x').value = '0';
+            document.getElementById('force-direction-y').value = '-1';
+            document.getElementById('distributed-force-direction-x').value = '0';
+            document.getElementById('distributed-force-direction-y').value = '-1';
             document.getElementById('sliding-hinge-direction-x').value = '0';
             document.getElementById('sliding-hinge-direction-y').value = '-1';
             break;
     }
 }
-
 // 添加集中力
 function addForce() {
     try {
-        const magnitude = parseExpression(document.getElementById('force-magnitude').value);
-        const positionX = parseExpression(document.getElementById('force-position-x').value);
-        const positionY = parseExpression(document.getElementById('force-position-y').value);
+        // 获取输入值
+        const value = parseExpression(document.getElementById('force-value').value);
+        const unit = document.getElementById('force-unit').value;
+        const placeX = parseExpression(document.getElementById('force-place-x').value);
+        const placeY = parseExpression(document.getElementById('force-place-y').value);
         const directionX = parseExpression(document.getElementById('force-direction-x').value);
         const directionY = parseExpression(document.getElementById('force-direction-y').value);
         
+        // 计算方向向量的模长
+        const magnitude = Math.sqrt(directionX * directionX + directionY * directionY);
+        if (magnitude === 0) {
+            throw new Error('方向向量不能为零');
+        }
+        
+        // 归一化方向向量
+        const direcX = directionX / magnitude;
+        const direcY = directionY / magnitude;
+        
+        // 转换单位
+        const convertedValue = convertForceUnit(value, unit);
+        
+        // 创建力对象
         const force = {
             type: 'outerforce',
-            value: convertForceUnit(magnitude, globalUnits.force),
-            place: [
-                convertLengthUnit(positionX, globalUnits.length),
-                convertLengthUnit(positionY, globalUnits.length)
-            ],
-            direc: [directionX, directionY],
-            originalValue: magnitude,
-            unit: globalUnits.force,
+            value: convertedValue,
+            originalValue: value,
+            unit: unit,
+            place: [placeX, placeY],
+            direc: [direcX, direcY],
             lengthUnit: globalUnits.length
         };
         
+        // 添加到力学对象列表
         mechanicsObjects.push(force);
         
-        // 显示已添加的对象
+        // 更新显示
         displayObjects();
         
         // 在日志中显示
         const logDiv = document.getElementById('log');
         logDiv.innerHTML = '<h5>【操作日志】</h5>';
         logDiv.innerHTML += `<p>集中力添加成功！</p>`;
-        logDiv.innerHTML += `<p>值：${magnitude} ${globalUnits.force}</p>`;
-        logDiv.innerHTML += `<p>作用点：(${positionX}, ${positionY}) ${globalUnits.length}</p>`;
-        logDiv.innerHTML += `<p>方向：(${directionX}, ${directionY})</p>`;
+        logDiv.innerHTML += `<p>值：${value} ${unit}</p>`;
+        logDiv.innerHTML += `<p>作用点：(${placeX.toFixed(2)}, ${placeY.toFixed(2)})</p>`;
+        logDiv.innerHTML += `<p>方向：(${direcX.toFixed(2)}, ${direcY.toFixed(2)})</p>`;
         
         // 切换到日志标签页
         const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
@@ -203,34 +173,37 @@ function addForce() {
 // 添加集中力矩
 function addMoment() {
     try {
-        const magnitude = parseExpression(document.getElementById('moment-magnitude').value);
-        const positionX = parseExpression(document.getElementById('moment-position-x').value);
-        const positionY = parseExpression(document.getElementById('moment-position-y').value);
-        const direction = parseInt(document.getElementById('moment-direction').value);
+        // 获取输入值
+        const value = parseExpression(document.getElementById('moment-value').value);
+        const unit = document.getElementById('moment-unit').value;
+        const placeX = parseExpression(document.getElementById('moment-place-x').value);
+        const placeY = parseExpression(document.getElementById('moment-place-y').value);
         
+        // 转换单位
+        const convertedValue = convertTorqueUnit(value, unit);
+        
+        // 创建力矩对象
         const moment = {
             type: 'outertorque',
-            value: convertTorqueUnit(magnitude, globalUnits.torque) * direction,
-            place: [
-                convertLengthUnit(positionX, globalUnits.length),
-                convertLengthUnit(positionY, globalUnits.length)
-            ],
-            originalValue: magnitude * direction,
-            unit: globalUnits.torque,
+            value: convertedValue,
+            originalValue: value,
+            unit: unit,
+            place: [placeX, placeY],
             lengthUnit: globalUnits.length
         };
         
+        // 添加到力学对象列表
         mechanicsObjects.push(moment);
         
-        // 显示已添加的对象
+        // 更新显示
         displayObjects();
         
         // 在日志中显示
         const logDiv = document.getElementById('log');
         logDiv.innerHTML = '<h5>【操作日志】</h5>';
         logDiv.innerHTML += `<p>集中力矩添加成功！</p>`;
-        logDiv.innerHTML += `<p>值：${magnitude * direction} ${globalUnits.torque}</p>`;
-        logDiv.innerHTML += `<p>作用点：(${positionX}, ${positionY}) ${globalUnits.length}</p>`;
+        logDiv.innerHTML += `<p>值：${value} ${unit}</p>`;
+        logDiv.innerHTML += `<p>作用点：(${placeX.toFixed(2)}, ${placeY.toFixed(2)})</p>`;
         
         // 切换到日志标签页
         const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
@@ -250,7 +223,9 @@ function addMoment() {
 // 添加分布力
 function addDistributedForce() {
     try {
-        const magnitude = parseExpression(document.getElementById('distributed-force-magnitude').value);
+        // 获取输入值
+        const q = parseExpression(document.getElementById('distributed-force-value').value);
+        const unit = document.getElementById('distributed-force-unit').value;
         const startX = parseExpression(document.getElementById('distributed-force-start-x').value);
         const startY = parseExpression(document.getElementById('distributed-force-start-y').value);
         const endX = parseExpression(document.getElementById('distributed-force-end-x').value);
@@ -258,36 +233,45 @@ function addDistributedForce() {
         const directionX = parseExpression(document.getElementById('distributed-force-direction-x').value);
         const directionY = parseExpression(document.getElementById('distributed-force-direction-y').value);
         
+        // 计算方向向量的模长
+        const magnitude = Math.sqrt(directionX * directionX + directionY * directionY);
+        if (magnitude === 0) {
+            throw new Error('方向向量不能为零');
+        }
+        
+        // 归一化方向向量
+        const direcX = directionX / magnitude;
+        const direcY = directionY / magnitude;
+        
+        // 转换单位
+        const convertedQ = convertForceUnit(q, unit);
+        
+        // 创建分布力对象
         const distributedForce = {
             type: 'fenbuforce',
-            q: convertForceUnit(magnitude, globalUnits.force),
-            start: [
-                convertLengthUnit(startX, globalUnits.length),
-                convertLengthUnit(startY, globalUnits.length)
-            ],
-            end: [
-                convertLengthUnit(endX, globalUnits.length),
-                convertLengthUnit(endY, globalUnits.length)
-            ],
-            direc: [directionX, directionY],
-            originalQ: magnitude,
-            unit: globalUnits.force + '/m',
+            q: convertedQ,
+            originalQ: q,
+            unit: unit,
+            start: [startX, startY],
+            end: [endX, endY],
+            direc: [direcX, direcY],
             lengthUnit: globalUnits.length
         };
         
+        // 添加到力学对象列表
         mechanicsObjects.push(distributedForce);
         
-        // 显示已添加的对象
+        // 更新显示
         displayObjects();
         
         // 在日志中显示
         const logDiv = document.getElementById('log');
         logDiv.innerHTML = '<h5>【操作日志】</h5>';
         logDiv.innerHTML += `<p>分布力添加成功！</p>`;
-        logDiv.innerHTML += `<p>集度：${magnitude} ${globalUnits.force}/m</p>`;
-        logDiv.innerHTML += `<p>起点：(${startX}, ${startY}) ${globalUnits.length}</p>`;
-        logDiv.innerHTML += `<p>终点：(${endX}, ${endY}) ${globalUnits.length}</p>`;
-        logDiv.innerHTML += `<p>方向：(${directionX}, ${directionY})</p>`;
+        logDiv.innerHTML += `<p>集度：${q} ${unit}</p>`;
+        logDiv.innerHTML += `<p>起点：(${startX.toFixed(2)}, ${startY.toFixed(2)})</p>`;
+        logDiv.innerHTML += `<p>终点：(${endX.toFixed(2)}, ${endY.toFixed(2)})</p>`;
+        logDiv.innerHTML += `<p>方向：(${direcX.toFixed(2)}, ${direcY.toFixed(2)})</p>`;
         
         // 切换到日志标签页
         const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
@@ -307,41 +291,41 @@ function addDistributedForce() {
 // 添加分布力矩
 function addDistributedMoment() {
     try {
-        const magnitude = parseExpression(document.getElementById('distributed-moment-magnitude').value);
+        // 获取输入值
+        const m = parseExpression(document.getElementById('distributed-moment-value').value);
+        const unit = document.getElementById('distributed-moment-unit').value;
         const startX = parseExpression(document.getElementById('distributed-moment-start-x').value);
         const startY = parseExpression(document.getElementById('distributed-moment-start-y').value);
         const endX = parseExpression(document.getElementById('distributed-moment-end-x').value);
         const endY = parseExpression(document.getElementById('distributed-moment-end-y').value);
-        const direction = parseInt(document.getElementById('distributed-moment-direction').value);
         
+        // 转换单位
+        const convertedM = convertTorqueUnit(m, unit);
+        
+        // 创建分布力矩对象
         const distributedMoment = {
             type: 'fenbutorque',
-            m: convertTorqueUnit(magnitude, globalUnits.torque) * direction,
-            start: [
-                convertLengthUnit(startX, globalUnits.length),
-                convertLengthUnit(startY, globalUnits.length)
-            ],
-            end: [
-                convertLengthUnit(endX, globalUnits.length),
-                convertLengthUnit(endY, globalUnits.length)
-            ],
-            originalM: magnitude * direction,
-            unit: globalUnits.torque + '/m',
+            m: convertedM,
+            originalM: m,
+            unit: unit,
+            start: [startX, startY],
+            end: [endX, endY],
             lengthUnit: globalUnits.length
         };
         
+        // 添加到力学对象列表
         mechanicsObjects.push(distributedMoment);
         
-        // 显示已添加的对象
+        // 更新显示
         displayObjects();
         
         // 在日志中显示
         const logDiv = document.getElementById('log');
         logDiv.innerHTML = '<h5>【操作日志】</h5>';
         logDiv.innerHTML += `<p>分布力矩添加成功！</p>`;
-        logDiv.innerHTML += `<p>力矩集度：${magnitude * direction} ${globalUnits.torque}/m</p>`;
-        logDiv.innerHTML += `<p>起点：(${startX}, ${startY}) ${globalUnits.length}</p>`;
-        logDiv.innerHTML += `<p>终点：(${endX}, ${endY}) ${globalUnits.length}</p>`;
+        logDiv.innerHTML += `<p>集度：${m} ${unit}</p>`;
+        logDiv.innerHTML += `<p>起点：(${startX.toFixed(2)}, ${startY.toFixed(2)})</p>`;
+        logDiv.innerHTML += `<p>终点：(${endX.toFixed(2)}, ${endY.toFixed(2)})</p>`;
         
         // 切换到日志标签页
         const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
@@ -361,28 +345,28 @@ function addDistributedMoment() {
 // 添加固定铰
 function addFixedHinge() {
     try {
-        const positionX = parseExpression(document.getElementById('fixed-hinge-position-x').value);
-        const positionY = parseExpression(document.getElementById('fixed-hinge-position-y').value);
+        // 获取输入值
+        const placeX = parseExpression(document.getElementById('fixed-hinge-position-x').value);
+        const placeY = parseExpression(document.getElementById('fixed-hinge-position-y').value);
         
+        // 创建固定铰对象
         const fixedHinge = {
             type: 'gdjzz',
-            place: [
-                convertLengthUnit(positionX, globalUnits.length),
-                convertLengthUnit(positionY, globalUnits.length)
-            ],
+            place: [placeX, placeY],
             lengthUnit: globalUnits.length
         };
         
+        // 添加到力学对象列表
         mechanicsObjects.push(fixedHinge);
         
-        // 显示已添加的对象
+        // 更新显示
         displayObjects();
         
         // 在日志中显示
         const logDiv = document.getElementById('log');
         logDiv.innerHTML = '<h5>【操作日志】</h5>';
         logDiv.innerHTML += `<p>固定铰添加成功！</p>`;
-        logDiv.innerHTML += `<p>位置：(${positionX}, ${positionY}) ${globalUnits.length}</p>`;
+        logDiv.innerHTML += `<p>位置：(${placeX.toFixed(2)}, ${placeY.toFixed(2)})</p>`;
         
         // 切换到日志标签页
         const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
@@ -402,32 +386,42 @@ function addFixedHinge() {
 // 添加滑动铰
 function addSlidingHinge() {
     try {
-        const positionX = parseExpression(document.getElementById('sliding-hinge-position-x').value);
-        const positionY = parseExpression(document.getElementById('sliding-hinge-position-y').value);
+        // 获取输入值
+        const placeX = parseExpression(document.getElementById('sliding-hinge-position-x').value);
+        const placeY = parseExpression(document.getElementById('sliding-hinge-position-y').value);
         const directionX = parseExpression(document.getElementById('sliding-hinge-direction-x').value);
         const directionY = parseExpression(document.getElementById('sliding-hinge-direction-y').value);
         
+        // 计算方向向量的模长
+        const magnitude = Math.sqrt(directionX * directionX + directionY * directionY);
+        if (magnitude === 0) {
+            throw new Error('方向向量不能为零');
+        }
+        
+        // 归一化方向向量
+        const direcX = directionX / magnitude;
+        const direcY = directionY / magnitude;
+        
+        // 创建滑动铰对象
         const slidingHinge = {
             type: 'hdjzz',
-            place: [
-                convertLengthUnit(positionX, globalUnits.length),
-                convertLengthUnit(positionY, globalUnits.length)
-            ],
-            direc: [directionX, directionY],
+            place: [placeX, placeY],
+            direc: [direcX, direcY],
             lengthUnit: globalUnits.length
         };
         
+        // 添加到力学对象列表
         mechanicsObjects.push(slidingHinge);
         
-        // 显示已添加的对象
+        // 更新显示
         displayObjects();
         
         // 在日志中显示
         const logDiv = document.getElementById('log');
         logDiv.innerHTML = '<h5>【操作日志】</h5>';
         logDiv.innerHTML += `<p>滑动铰添加成功！</p>`;
-        logDiv.innerHTML += `<p>位置：(${positionX}, ${positionY}) ${globalUnits.length}</p>`;
-        logDiv.innerHTML += `<p>方向：(${directionX}, ${directionY})</p>`;
+        logDiv.innerHTML += `<p>位置：(${placeX.toFixed(2)}, ${placeY.toFixed(2)})</p>`;
+        logDiv.innerHTML += `<p>方向：(${direcX.toFixed(2)}, ${direcY.toFixed(2)})</p>`;
         
         // 切换到日志标签页
         const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
@@ -447,28 +441,28 @@ function addSlidingHinge() {
 // 添加固定支座
 function addFixed() {
     try {
-        const positionX = parseExpression(document.getElementById('fixed-position-x').value);
-        const positionY = parseExpression(document.getElementById('fixed-position-y').value);
+        // 获取输入值
+        const placeX = parseExpression(document.getElementById('fixed-position-x').value);
+        const placeY = parseExpression(document.getElementById('fixed-position-y').value);
         
+        // 创建固定支座对象
         const fixed = {
             type: 'gdzz',
-            place: [
-                convertLengthUnit(positionX, globalUnits.length),
-                convertLengthUnit(positionY, globalUnits.length)
-            ],
+            place: [placeX, placeY],
             lengthUnit: globalUnits.length
         };
         
+        // 添加到力学对象列表
         mechanicsObjects.push(fixed);
         
-        // 显示已添加的对象
+        // 更新显示
         displayObjects();
         
         // 在日志中显示
         const logDiv = document.getElementById('log');
         logDiv.innerHTML = '<h5>【操作日志】</h5>';
         logDiv.innerHTML += `<p>固定支座添加成功！</p>`;
-        logDiv.innerHTML += `<p>位置：(${positionX}, ${positionY}) ${globalUnits.length}</p>`;
+        logDiv.innerHTML += `<p>位置：(${placeX.toFixed(2)}, ${placeY.toFixed(2)})</p>`;
         
         // 切换到日志标签页
         const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
@@ -485,173 +479,7 @@ function addFixed() {
     }
 }
 
-// 求解器类
-class Solver {
-    constructor(mechanicsObjects, n = 1) {
-        this.mechanicsObjects = mechanicsObjects;
-        this.n = n;
-        this.restrictioncnt = 3 * n;
-        this.matrixcnt = 0;
-        this.restrictiondic = { gdjzz: [], hdjzz: [], gdzz: [] };
-        // 直接初始化数组，而不是使用math.zeros
-        this.beta = [[0], [0], [0]];
-        this.A = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
-    }
-    
-    countEquation() {
-        for (const obj of this.mechanicsObjects) {
-            if (obj.type === 'gdjzz') {
-                this.restrictioncnt -= 2;
-                this.restrictiondic.gdjzz.push(obj);
-            } else if (obj.type === 'gdzz') {
-                this.restrictioncnt -= 3;
-                this.restrictiondic.gdzz.push(obj);
-            } else if (obj.type === 'hdjzz') {
-                this.restrictioncnt -= 1;
-                this.restrictiondic.hdjzz.push(obj);
-            } else if (obj.type === 'outerforce') {
-                const fx = obj.value * obj.direc[0];
-                const fy = obj.value * obj.direc[1];
-                this.beta[0][0] -= fx;
-                this.beta[1][0] -= fy;
-                this.beta[2][0] -= fy * obj.place[0] - fx * obj.place[1];
-            } else if (obj.type === 'fenbuforce') {
-                // 分布力的处理
-                const length = Math.sqrt((obj.end[0] - obj.start[0])**2 + (obj.end[1] - obj.start[1])**2);
-                const fx = obj.q * length * obj.direc[0];
-                const fy = obj.q * length * obj.direc[1];
-                // 计算分布力的等效作用点（中点）
-                const placeX = (obj.start[0] + obj.end[0]) / 2;
-                const placeY = (obj.start[1] + obj.end[1]) / 2;
-                this.beta[0][0] -= fx;
-                this.beta[1][0] -= fy;
-                this.beta[2][0] -= fy * placeX - fx * placeY;
-            } else if (obj.type === 'outertorque') {
-                this.beta[2][0] -= obj.value;
-            } else if (obj.type === 'fenbutorque') {
-                // 分布力矩的处理
-                this.beta[2][0] -= obj.m;
-            }
-        }
-        
-        if (this.restrictioncnt < 0) {
-            throw new Error('系统超静定');
-        } else if (this.restrictioncnt > 0) {
-            throw new Error('系统静不定');
-        } else if (this.restrictioncnt === 0) {
-            console.log('可以求解...');
-        } else {
-            throw new Error('未知问题');
-        }
-    }
-    
-    compileEquation() {
-        for (const obj of this.restrictiondic.gdjzz) {
-            this.A[0][this.matrixcnt] = 1;
-            this.A[1][this.matrixcnt] = 0;
-            this.A[2][this.matrixcnt] = -obj.place[1];
-            this.A[0][this.matrixcnt + 1] = 0;
-            this.A[1][this.matrixcnt + 1] = 1;
-            this.A[2][this.matrixcnt + 1] = obj.place[0];
-            this.matrixcnt += 2;
-        }
-        
-        for (const obj of this.restrictiondic.hdjzz) {
-            this.A[0][this.matrixcnt] = obj.direc[0];
-            this.A[1][this.matrixcnt] = obj.direc[1];
-            this.A[2][this.matrixcnt] = obj.place[0] * obj.direc[1] - obj.place[1] * obj.direc[0];
-            this.matrixcnt += 1;
-        }
-        
-        for (const obj of this.restrictiondic.gdzz) {
-            this.A[0][this.matrixcnt] = 1;
-            this.A[1][this.matrixcnt] = 0;
-            this.A[2][this.matrixcnt] = -obj.place[1];
-            this.A[0][this.matrixcnt + 1] = 0;
-            this.A[1][this.matrixcnt + 1] = 1;
-            this.A[2][this.matrixcnt + 1] = obj.place[0];
-            this.A[0][this.matrixcnt + 2] = 0;
-            this.A[1][this.matrixcnt + 2] = 0;
-            this.A[2][this.matrixcnt + 2] = 1;
-            this.matrixcnt += 3;
-        }
-        
-        console.log('编译完成...');
-    }
-    
-    solveEquation() {
-        this.countEquation();
-        this.compileEquation();
-        
-        try {
-            // 将普通数组转换为math.js矩阵
-            const A_matrix = math.matrix(this.A);
-            const beta_matrix = math.matrix(this.beta);
-            const X = math.lusolve(A_matrix, beta_matrix);
-            console.log('求解完成...');
-            return X;
-        } catch (e) {
-            throw new Error('方程无解');
-        }
-    }
-}
-
-// 获取对象类型的全称
-function getObjectTypeName(type) {
-    const typeMap = {
-        'outerforce': '外力',
-        'outertorque': '外力矩',
-        'fenbuforce': '分布力',
-        'fenbutorque': '分布力矩',
-        'hdjzz': '滑动铰',
-        'gdjzz': '固定铰',
-        'gdzz': '固定支座'
-    };
-    return typeMap[type] || type;
-}
-
-// 显示对象确认对话框
-function showObjectConfirmation() {
-    let confirmationHTML = '<h5>【请您确认:】</h5>';
-    
-    // 按类型分组显示
-    const objectsByType = {};
-    mechanicsObjects.forEach(obj => {
-        const typeName = getObjectTypeName(obj.type);
-        if (!objectsByType[typeName]) {
-            objectsByType[typeName] = [];
-        }
-        objectsByType[typeName].push(obj);
-    });
-    
-    // 显示每种类型的对象
-    for (const [typeName, objs] of Object.entries(objectsByType)) {
-        confirmationHTML += `<h6 class="mt-3">${typeName} (${objs.length}个)</h6>`;
-        objs.forEach((obj, idx) => {
-            confirmationHTML += '<div class="border p-2 mb-2 rounded">';
-            if (obj.type === 'outerforce') {
-                confirmationHTML += `<p>值：${obj.originalValue} ${obj.unit}，作用点：(${obj.place[0].toFixed(3)}, ${obj.place[1].toFixed(3)}) m，方向：(${obj.direc[0]}, ${obj.direc[1]})</p>`;
-            } else if (obj.type === 'outertorque') {
-                confirmationHTML += `<p>值：${obj.originalValue} ${obj.unit}，作用点：(${obj.place[0].toFixed(3)}, ${obj.place[1].toFixed(3)}) m</p>`;
-            } else if (obj.type === 'fenbuforce') {
-                confirmationHTML += `<p>集度：${obj.originalQ} ${obj.unit}，起点：(${obj.start[0].toFixed(3)}, ${obj.start[1].toFixed(3)}) m，终点：(${obj.end[0].toFixed(3)}, ${obj.end[1].toFixed(3)}) m，方向：(${obj.direc[0]}, ${obj.direc[1]})</p>`;
-            } else if (obj.type === 'fenbutorque') {
-                confirmationHTML += `<p>力矩集度：${obj.originalM} ${obj.unit}，起点：(${obj.start[0].toFixed(3)}, ${obj.start[1].toFixed(3)}) m，终点：(${obj.end[0].toFixed(3)}, ${obj.end[1].toFixed(3)}) m</p>`;
-            } else if (obj.type === 'hdjzz') {
-                confirmationHTML += `<p>位置：(${obj.place[0].toFixed(3)}, ${obj.place[1].toFixed(3)}) m，方向：(${obj.direc[0]}, ${obj.direc[1]})</p>`;
-            } else if (obj.type === 'gdjzz') {
-                confirmationHTML += `<p>位置：(${obj.place[0].toFixed(3)}, ${obj.place[1].toFixed(3)}) m</p>`;
-            } else if (obj.type === 'gdzz') {
-                confirmationHTML += `<p>位置：(${obj.place[0].toFixed(3)}, ${obj.place[1].toFixed(3)}) m</p>`;
-            }
-            confirmationHTML += '</div>';
-        });
-    }
-    
-    return confirmationHTML;
-}
-
-// 求解函数
+// 求解
 function solve() {
     if (mechanicsObjects.length === 0) {
         // 在日志中显示
@@ -670,126 +498,193 @@ function solve() {
     logDiv.innerHTML = '';
     resultDiv.innerHTML = '';
     
-    // 显示对象确认信息
-    const confirmationHTML = showObjectConfirmation();
-    logDiv.innerHTML = confirmationHTML;
-    
-    // 添加确认按钮
-    const confirmButton = document.createElement('button');
-    confirmButton.className = 'btn btn-primary mt-3';
-    confirmButton.textContent = '确认求解';
-    confirmButton.onclick = function() {
-        try {
-            // 清空日志区域
-            logDiv.innerHTML = '<h5>【求解日志】</h5>';
-            
-            // 记录开始时间
-            const startTime = new Date();
-            logDiv.innerHTML += `<p>求解开始时间：${startTime.toLocaleString()}</p>`;
-            
-            // 统计自由度
-            let dof = 3; // 平面问题有3个自由度
-            let constraints = 0;
-            
-            mechanicsObjects.forEach(obj => {
-                if (obj.type === 'gdjzz') {
-                    constraints += 2;
-                } else if (obj.type === 'hdjzz') {
-                    constraints += 1;
-                } else if (obj.type === 'gdzz') {
-                    constraints += 3;
-                }
-            });
-            
-            const remainingDof = dof - constraints;
-            logDiv.innerHTML += `<p>系统自由度：${dof}</p>`;
-            logDiv.innerHTML += `<p>约束数量：${constraints}</p>`;
-            logDiv.innerHTML += `<p>剩余自由度：${remainingDof}</p>`;
-            
-            if (remainingDof === 0) {
-                logDiv.innerHTML += `<p class="text-success">系统静定，可以求解</p>`;
-            } else if (remainingDof > 0) {
-                throw new Error('系统静不定，无法求解');
-            } else {
-                throw new Error('系统超静定，无法求解');
+    // 直接求解，跳过确认步骤
+    try {
+        // 清空日志区域
+        logDiv.innerHTML = '<h5>【求解日志】</h5>';
+        
+        // 记录开始时间
+        const startTime = new Date();
+        logDiv.innerHTML += `<p>求解开始时间：${startTime.toLocaleString()}</p>`;
+        
+        // 统计自由度
+        let dof = 3; // 平面问题有3个自由度
+        let constraints = 0;
+        
+        mechanicsObjects.forEach(obj => {
+            if (obj.type === 'gdjzz') {
+                constraints += 2;
+            } else if (obj.type === 'hdjzz') {
+                constraints += 1;
+            } else if (obj.type === 'gdzz') {
+                constraints += 3;
             }
+        });
+        
+        const remainingDof = dof - constraints;
+        logDiv.innerHTML += `<p>系统自由度：${dof}</p>`;
+        logDiv.innerHTML += `<p>约束数量：${constraints}</p>`;
+        logDiv.innerHTML += `<p>剩余自由度：${remainingDof}</p>`;
+        
+        if (remainingDof === 0) {
+            logDiv.innerHTML += `<p class="text-success">系统静定，可以求解</p>`;
+        } else if (remainingDof > 0) {
+            throw new Error('系统静不定，无法求解');
+        } else {
+            throw new Error('系统超静定，无法求解');
+        }
+        
+        // 创建求解器并求解
+        const sol = new Solver(mechanicsObjects);
+        logDiv.innerHTML += `<p>正在求解方程...</p>`;
+        const X = sol.solveEquation();
+        logDiv.innerHTML += `<p class="text-success">方程求解成功</p>`;
+        
+        // 记录结束时间
+        const endTime = new Date();
+        const duration = (endTime - startTime) / 1000;
+        logDiv.innerHTML += `<p>求解结束时间：${endTime.toLocaleString()}</p>`;
+        logDiv.innerHTML += `<p>求解耗时：${duration.toFixed(3)} 秒</p>`;
+        
+        // 显示求解结果
+        resultDiv.innerHTML = '<h5>【求解结果】</h5>';
+        // 将math.js矩阵转换为普通数组
+        const X_array = math.flatten(X).toArray();
+        
+        // 格式化显示结果，添加标注
+        let resultHTML = '<div class="border p-3 rounded">';
+        
+        // 根据约束类型确定结果含义，顺序与compileEquation一致：固定铰 -> 滑动铰 -> 固定支座
+        let constraintCount = 0;
+        let resultLabels = [];
+        
+        // 先处理固定铰
+        mechanicsObjects.forEach(obj => {
+            if (obj.type === 'gdjzz') {
+                resultLabels.push('固定铰 (位置: (' + obj.place[0].toFixed(3) + ', ' + obj.place[1].toFixed(3) + ') m) X方向约束力');
+                resultLabels.push('固定铰 (位置: (' + obj.place[0].toFixed(3) + ', ' + obj.place[1].toFixed(3) + ') m) Y方向约束力');
+                constraintCount += 2;
+            }
+        });
+        
+        // 再处理滑动铰
+        mechanicsObjects.forEach(obj => {
+            if (obj.type === 'hdjzz') {
+                resultLabels.push('滑动铰 (位置: (' + obj.place[0].toFixed(3) + ', ' + obj.place[1].toFixed(3) + ') m) 滑动方向约束力');
+                constraintCount += 1;
+            }
+        });
+        
+        // 最后处理固定支座
+        mechanicsObjects.forEach(obj => {
+            if (obj.type === 'gdzz') {
+                resultLabels.push('固定支座 (位置: (' + obj.place[0].toFixed(3) + ', ' + obj.place[1].toFixed(3) + ') m) X方向约束力');
+                resultLabels.push('固定支座 (位置: (' + obj.place[0].toFixed(3) + ', ' + obj.place[1].toFixed(3) + ') m) Y方向约束力');
+                resultLabels.push('固定支座 (位置: (' + obj.place[0].toFixed(3) + ', ' + obj.place[1].toFixed(3) + ') m) 约束力矩');
+                constraintCount += 3;
+            }
+        });
+        
+        // 显示结果
+        for (let i = 0; i < X_array.length; i++) {
+            const label = resultLabels[i] || `约束力 ${i+1}`;
+            const value = X_array[i].toFixed(4);
+            // 根据标签判断单位
+            let unit = 'N';
+            if (label.includes('力矩')) {
+                unit = 'N·m';
+            }
+            resultHTML += `<p><strong>${label}：</strong>${value} ${unit}</p>`;
+        }
+        
+        resultHTML += '</div>';
+        resultDiv.innerHTML += resultHTML;
+        
+        // 计算内力图
+        const beams = mechanicsObjects.filter(obj => obj.type === 'beam');
+        if (beams.length > 0) {
+            const beam = beams[0];
             
-            // 创建求解器并求解
-            const sol = new Solver(mechanicsObjects);
-            logDiv.innerHTML += `<p>正在求解方程...</p>`;
-            const X = sol.solveEquation();
-            logDiv.innerHTML += `<p class="text-success">方程求解成功</p>`;
+            // 提取约束力
+            const constraintForces = [];
+            let forceIndex = 0;
             
-            // 记录结束时间
-            const endTime = new Date();
-            const duration = (endTime - startTime) / 1000;
-            logDiv.innerHTML += `<p>求解结束时间：${endTime.toLocaleString()}</p>`;
-            logDiv.innerHTML += `<p>求解耗时：${duration.toFixed(3)} 秒</p>`;
-            
-            // 显示求解结果
-            resultDiv.innerHTML = '<h5>【求解结果】</h5>';
-            // 将math.js矩阵转换为普通数组
-            const X_array = math.flatten(X).toArray();
-            
-            // 格式化显示结果，添加标注
-            let resultHTML = '<div class="border p-3 rounded">';
-            
-            // 根据约束类型确定结果含义，顺序与compileEquation一致：固定铰 -> 滑动铰 -> 固定支座
-            let constraintCount = 0;
-            let resultLabels = [];
-            
-            // 先处理固定铰
+            // 固定铰约束力
             mechanicsObjects.forEach(obj => {
                 if (obj.type === 'gdjzz') {
-                    resultLabels.push('固定铰 (位置: (' + obj.place[0].toFixed(3) + ', ' + obj.place[1].toFixed(3) + ') m) X方向约束力');
-                    resultLabels.push('固定铰 (位置: (' + obj.place[0].toFixed(3) + ', ' + obj.place[1].toFixed(3) + ') m) Y方向约束力');
-                    constraintCount += 2;
+                    constraintForces.push({
+                        value: X_array[forceIndex],
+                        position: obj.place,
+                        direction: [1, 0],
+                        type: 'constraint'
+                    });
+                    forceIndex++;
+                    constraintForces.push({
+                        value: X_array[forceIndex],
+                        position: obj.place,
+                        direction: [0, 1],
+                        type: 'constraint'
+                    });
+                    forceIndex++;
                 }
             });
             
-            // 再处理滑动铰
+            // 滑动铰约束力
             mechanicsObjects.forEach(obj => {
                 if (obj.type === 'hdjzz') {
-                    resultLabels.push('滑动铰 (位置: (' + obj.place[0].toFixed(3) + ', ' + obj.place[1].toFixed(3) + ') m) 滑动方向约束力');
-                    constraintCount += 1;
+                    constraintForces.push({
+                        value: X_array[forceIndex],
+                        position: obj.place,
+                        direction: obj.direc,
+                        type: 'constraint'
+                    });
+                    forceIndex++;
                 }
             });
             
-            // 最后处理固定支座
+            // 固定支座约束力
             mechanicsObjects.forEach(obj => {
                 if (obj.type === 'gdzz') {
-                    resultLabels.push('固定支座 (位置: (' + obj.place[0].toFixed(3) + ', ' + obj.place[1].toFixed(3) + ') m) X方向约束力');
-                    resultLabels.push('固定支座 (位置: (' + obj.place[0].toFixed(3) + ', ' + obj.place[1].toFixed(3) + ') m) Y方向约束力');
-                    resultLabels.push('固定支座 (位置: (' + obj.place[0].toFixed(3) + ', ' + obj.place[1].toFixed(3) + ') m) 约束力矩');
-                    constraintCount += 3;
+                    constraintForces.push({
+                        value: X_array[forceIndex],
+                        position: obj.place,
+                        direction: [1, 0],
+                        type: 'constraint'
+                    });
+                    forceIndex++;
+                    constraintForces.push({
+                        value: X_array[forceIndex],
+                        position: obj.place,
+                        direction: [0, 1],
+                        type: 'constraint'
+                    });
+                    forceIndex++;
+                    constraintForces.push({
+                        value: X_array[forceIndex],
+                        position: obj.place,
+                        direction: [0, 0],
+                        type: 'constraint'
+                    });
+                    forceIndex++;
                 }
             });
             
-            // 显示结果
-            for (let i = 0; i < X_array.length; i++) {
-                const label = resultLabels[i] || `约束力 ${i+1}`;
-                const value = X_array[i].toFixed(4);
-                // 根据标签判断单位
-                let unit = 'N';
-                if (label.includes('力矩')) {
-                    unit = 'N·m';
-                }
-                resultHTML += `<p><strong>${label}：</strong>${value} ${unit}</p>`;
-            }
+            // 计算内力
+            const internalForcesData = calculateInternalForces(beam, mechanicsObjects, constraintForces);
             
-            resultHTML += '</div>';
-            resultDiv.innerHTML += resultHTML;
+            // 绘制内力图
+            drawInternalForcesDiagram(internalForcesData, 'internal-forces');
             
-            // 切换到约束力标签页
-            const constraintTab = new bootstrap.Tab(document.getElementById('constraint-tab'));
-            constraintTab.show();
-            
-        } catch (e) {
-            logDiv.innerHTML += `<div class="alert alert-danger mt-3">求解失败：${e.message}</div>`;
+            logDiv.innerHTML += `<p class="text-success">内力图计算完成</p>`;
         }
-    };
-    
-    logDiv.appendChild(confirmButton);
+        
+        // 切换到约束力标签页
+        const constraintTab = new bootstrap.Tab(document.getElementById('constraint-tab'));
+        constraintTab.show();
+        
+    } catch (e) {
+        logDiv.innerHTML += `<div class="alert alert-danger mt-3">求解失败：${e.message}</div>`;
+    }
 }
 
 // 可视化模型
@@ -966,6 +861,109 @@ function visualizeModel() {
     visualizationDiv.appendChild(svg);
 }
 
+// 预览梁的几何图形
+function previewBeam() {
+    try {
+        // 获取输入的梁起点和终点坐标
+        const startX = parseExpression(document.getElementById('beam-start-x').value);
+        const startY = parseExpression(document.getElementById('beam-start-y').value);
+        const endX = parseExpression(document.getElementById('beam-end-x').value);
+        const endY = parseExpression(document.getElementById('beam-end-y').value);
+        
+        // 获取可视化区域
+        const visualizationDiv = document.getElementById('visualization');
+        visualizationDiv.innerHTML = '';
+        
+        // 创建SVG元素
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '100%');
+        svg.setAttribute('viewBox', '0 0 400 300');
+        
+        // 计算缩放和平移，使梁的中点位于画布中央
+        const minX = Math.min(startX, endX);
+        const maxX = Math.max(startX, endX);
+        const minY = Math.min(startY, endY);
+        const maxY = Math.max(startY, endY);
+        const width = maxX - minX;
+        const height = maxY - minY;
+        const padding = 50;
+        const scaleX = (400 - 2 * padding) / (width || 1);
+        const scaleY = (300 - 2 * padding) / (height || 1);
+        const scale = Math.min(scaleX, scaleY);
+        
+        // 计算梁的中点
+        const midX = (startX + endX) / 2;
+        const midY = (startY + endY) / 2;
+        
+        // 计算平移，使梁的中点位于画布中央
+        const canvasCenterX = 200; // 画布宽度的一半
+        const canvasCenterY = 150; // 画布高度的一半
+        const translateX = canvasCenterX - midX * scale;
+        const translateY = canvasCenterY - midY * scale;
+        
+        // 绘制梁
+        const beamElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        beamElement.setAttribute('x1', startX * scale + translateX);
+        beamElement.setAttribute('y1', startY * scale + translateY);
+        beamElement.setAttribute('x2', endX * scale + translateX);
+        beamElement.setAttribute('y2', endY * scale + translateY);
+        beamElement.setAttribute('stroke', 'black');
+        beamElement.setAttribute('stroke-width', '3');
+        svg.appendChild(beamElement);
+        
+        // 绘制起点和终点（不显示标签）
+        const startPoint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        startPoint.setAttribute('cx', startX * scale + translateX);
+        startPoint.setAttribute('cy', startY * scale + translateY);
+        startPoint.setAttribute('r', '5');
+        startPoint.setAttribute('fill', 'red');
+        svg.appendChild(startPoint);
+        
+        const endPoint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        endPoint.setAttribute('cx', endX * scale + translateX);
+        endPoint.setAttribute('cy', endY * scale + translateY);
+        endPoint.setAttribute('r', '5');
+        endPoint.setAttribute('fill', 'blue');
+        svg.appendChild(endPoint);
+        
+        // 添加梁到可视化区域
+        visualizationDiv.appendChild(svg);
+        
+        // 创建梁对象并添加到力学对象数组
+        const beam = {
+            type: 'beam',
+            start: [startX, startY],
+            end: [endX, endY],
+            lengthUnit: globalUnits.length
+        };
+        mechanicsObjects.push(beam);
+        
+        // 更新工作树显示
+        displayObjects();
+        
+        // 在日志中显示
+        const logDiv = document.getElementById('log');
+        logDiv.innerHTML = '<h5>【操作日志】</h5>';
+        logDiv.innerHTML += `<p>梁添加成功！</p>`;
+        logDiv.innerHTML += `<p>起点：(${startX.toFixed(2)}, ${startY.toFixed(2)})</p>`;
+        logDiv.innerHTML += `<p>终点：(${endX.toFixed(2)}, ${endY.toFixed(2)})</p>`;
+        
+        // 切换到日志标签页
+        const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
+        logTab.show();
+    } catch (e) {
+        // 在日志中显示错误
+        const logDiv = document.getElementById('log');
+        logDiv.innerHTML = '<h5>【操作日志】</h5>';
+        logDiv.innerHTML += `<div class="alert alert-danger">添加梁错误：${e.message}</div>`;
+        
+        // 切换到日志标签页
+        const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
+        logTab.show();
+    }
+}
+
 // 显示已添加的力学对象
 function displayObjects() {
     const objectsList = document.getElementById('objects-list');
@@ -978,12 +976,15 @@ function displayObjects() {
     
     // 通过检查所有大标签页的class来确定当前活动的大标签页
     const globalTab = document.getElementById('global');
+    const geometryTab = document.getElementById('geometry');
     const forceTab = document.getElementById('force');
     const constraintTab = document.getElementById('constraint');
     
     let activeTabId = '';
     if (globalTab && globalTab.classList.contains('active')) {
         activeTabId = 'global';
+    } else if (geometryTab && geometryTab.classList.contains('active')) {
+        activeTabId = 'geometry';
     } else if (forceTab && forceTab.classList.contains('active')) {
         activeTabId = 'force';
     } else if (constraintTab && constraintTab.classList.contains('active')) {
@@ -991,6 +992,7 @@ function displayObjects() {
     }
     
     // 按类型分组
+    const beams = mechanicsObjects.filter(obj => obj.type === 'beam');
     const forces = mechanicsObjects.filter(obj => obj.type === 'outerforce');
     const moments = mechanicsObjects.filter(obj => obj.type === 'outertorque');
     const distributedForces = mechanicsObjects.filter(obj => obj.type === 'fenbuforce');
@@ -1002,6 +1004,7 @@ function displayObjects() {
     // 调试信息
     console.log('Active tab:', activeTabId);
     console.log('Mechanics objects count:', mechanicsObjects.length);
+    console.log('Beams:', beams.length);
     console.log('Forces:', forces.length);
     console.log('Moments:', moments.length);
     console.log('Distributed forces:', distributedForces.length);
@@ -1011,7 +1014,29 @@ function displayObjects() {
     console.log('Fixed supports:', fixedSupports.length);
     
     // 根据当前活动标签页显示对应的对象
-    if (activeTabId === 'force') {
+    if (activeTabId === 'geometry') {
+        // 显示几何相关对象
+        // 显示梁
+        if (beams.length > 0) {
+            const beamsSection = document.createElement('div');
+            beamsSection.className = 'mb-4';
+            beamsSection.innerHTML = `<h6>梁 (${beams.length}个)</h6>`;
+            
+            beams.forEach((beam, index) => {
+                const beamElement = document.createElement('div');
+                beamElement.className = 'card mb-2';
+                beamElement.innerHTML = `
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <p class="mb-0">起点: (${beam.start[0].toFixed(3)}, ${beam.start[1].toFixed(3)}) ${beam.lengthUnit}, 终点: (${beam.end[0].toFixed(3)}, ${beam.end[1].toFixed(3)}) ${beam.lengthUnit}</p>
+                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(beam)})">删除</button>
+                    </div>
+                `;
+                beamsSection.appendChild(beamElement);
+            });
+            
+            objectsList.appendChild(beamsSection);
+        }
+    } else if (activeTabId === 'force') {
         // 显示力相关对象
         // 显示集中力
         if (forces.length > 0) {
@@ -1162,16 +1187,18 @@ function displayObjects() {
         }
     }
     
-    // 如果没有对象，显示提示
-    if (objectsList.innerHTML === '') {
-        objectsList.innerHTML = '<p class="text-muted">暂无添加的对象</p>';
-    }
 }
 
 // 删除对象
 function deleteObject(index) {
+    const deletedObject = mechanicsObjects[index];
     mechanicsObjects.splice(index, 1);
     displayObjects();
+    
+    // 如果删除的是梁，更新可视化区域
+    if (deletedObject.type === 'beam') {
+        updateVisualization();
+    }
     
     // 在日志中显示
     const logDiv = document.getElementById('log');
@@ -1183,34 +1210,236 @@ function deleteObject(index) {
     logTab.show();
 }
 
-// 编辑对象（简化版，实际应用中需要创建编辑表单）
-function editObject(index) {
-    // 在日志中显示
-    const logDiv = document.getElementById('log');
-    logDiv.innerHTML = '<h5>【操作日志】</h5>';
-    logDiv.innerHTML += `<p>编辑功能暂未实现，敬请期待！</p>`;
+// 更新可视化区域
+function updateVisualization() {
+    const visualizationDiv = document.getElementById('visualization');
+    visualizationDiv.innerHTML = '';
     
-    // 切换到日志标签页
-    const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
-    logTab.show();
+    // 检查是否有梁对象
+    const beams = mechanicsObjects.filter(obj => obj.type === 'beam');
+    if (beams.length > 0) {
+        // 只显示第一个梁
+        const beam = beams[0];
+        const startX = beam.start[0];
+        const startY = beam.start[1];
+        const endX = beam.end[0];
+        const endY = beam.end[1];
+        
+        // 创建SVG元素
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '100%');
+        svg.setAttribute('viewBox', '0 0 400 300');
+        
+        // 计算缩放和平移，使梁的中点位于画布中央
+        const minX = Math.min(startX, endX);
+        const maxX = Math.max(startX, endX);
+        const minY = Math.min(startY, endY);
+        const maxY = Math.max(startY, endY);
+        const width = maxX - minX;
+        const height = maxY - minY;
+        const padding = 50;
+        const scaleX = (400 - 2 * padding) / (width || 1);
+        const scaleY = (300 - 2 * padding) / (height || 1);
+        const scale = Math.min(scaleX, scaleY);
+        
+        // 计算梁的中点
+        const midX = (startX + endX) / 2;
+        const midY = (startY + endY) / 2;
+        
+        // 计算平移，使梁的中点位于画布中央
+        const canvasCenterX = 200; // 画布宽度的一半
+        const canvasCenterY = 150; // 画布高度的一半
+        const translateX = canvasCenterX - midX * scale;
+        const translateY = canvasCenterY - midY * scale;
+        
+        // 绘制梁
+        const beamElement = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        beamElement.setAttribute('x1', startX * scale + translateX);
+        beamElement.setAttribute('y1', startY * scale + translateY);
+        beamElement.setAttribute('x2', endX * scale + translateX);
+        beamElement.setAttribute('y2', endY * scale + translateY);
+        beamElement.setAttribute('stroke', 'black');
+        beamElement.setAttribute('stroke-width', '3');
+        svg.appendChild(beamElement);
+        
+        // 绘制起点和终点（不显示标签）
+        const startPoint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        startPoint.setAttribute('cx', startX * scale + translateX);
+        startPoint.setAttribute('cy', startY * scale + translateY);
+        startPoint.setAttribute('r', '5');
+        startPoint.setAttribute('fill', 'red');
+        svg.appendChild(startPoint);
+        
+        const endPoint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        endPoint.setAttribute('cx', endX * scale + translateX);
+        endPoint.setAttribute('cy', endY * scale + translateY);
+        endPoint.setAttribute('r', '5');
+        endPoint.setAttribute('fill', 'blue');
+        svg.appendChild(endPoint);
+        
+        // 添加梁到可视化区域
+        visualizationDiv.appendChild(svg);
+    } else {
+        // 如果没有梁，清空可视化区域
+        visualizationDiv.innerHTML = '';
+    }
 }
 
-// 页面加载完成后绑定事件监听器
-document.addEventListener('DOMContentLoaded', function() {
-    // 绑定应用全局单位按钮
-    document.getElementById('applyUnits').addEventListener('click', applyGlobalUnits);
+// 绘制内力图（剪力、弯矩、轴力）
+function drawInternalForcesDiagram(internalForcesData, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+        console.error('Container not found:', containerId);
+        return;
+    }
     
-    // 绑定外力定义按钮
-    document.getElementById('add-force').addEventListener('click', addForce);
-    document.getElementById('add-moment').addEventListener('click', addMoment);
-    document.getElementById('add-distributed-force').addEventListener('click', addDistributedForce);
-    document.getElementById('add-distributed-moment').addEventListener('click', addDistributedMoment);
+    container.innerHTML = '';
     
-    // 绑定约束定义按钮
-    document.getElementById('add-fixed-hinge').addEventListener('click', addFixedHinge);
-    document.getElementById('add-sliding-hinge').addEventListener('click', addSlidingHinge);
-    document.getElementById('add-fixed').addEventListener('click', addFixed);
+    const { beamLength, internalForces } = internalForcesData;
     
-    // 显示已添加的对象
-    displayObjects();
-});
+    // 创建网格容器
+    const gridContainer = document.createElement('div');
+    gridContainer.className = 'row';
+    
+    // 创建三个子图：剪力图、弯矩图、轴力图
+    const diagrams = [
+        { title: '剪力图', data: internalForces.map(f => f.shearForce), color: '#e74c3c' },
+        { title: '弯矩图', data: internalForces.map(f => f.bendingMoment), color: '#3498db' },
+        { title: '轴力图', data: internalForces.map(f => f.axialForce), color: '#2ecc71' }
+    ];
+    
+    diagrams.forEach((diagram, index) => {
+        const diagramContainer = document.createElement('div');
+        diagramContainer.className = 'col-md-6 mb-4';
+        diagramContainer.innerHTML = `
+            <h6 class="mb-3">${diagram.title}</h6>
+            <svg width="100%" height="150" viewBox="0 0 400 150">
+                <g transform="translate(40, 75)">
+                    <!-- 坐标轴 -->
+                    <line x1="0" y1="-60" x2="0" y2="60" stroke="#333" stroke-width="1"/>
+                    <line x1="0" y1="0" x2="320" y2="0" stroke="#333" stroke-width="1"/>
+                    
+                    <!-- 箭头 -->
+                    <polygon points="0,-65 -5,-55 5,-55" fill="#333"/>
+                    <polygon points="325,0 315,-5 315,5" fill="#333"/>
+                    
+                    <!-- 坐标轴标签 -->
+                    <text x="330" y="15" font-size="10" fill="#333">位置 (m)</text>
+                    <text x="-30" y="-65" font-size="10" fill="#333" transform="rotate(-90, -30, -65)">值 (N/N·m)</text>
+                </g>
+            </svg>
+        `;
+        
+        const svg = diagramContainer.querySelector('svg');
+        const group = svg.querySelector('g');
+        
+        // 计算数据范围
+        const data = diagram.data;
+        const maxValue = Math.max(...data);
+        const minValue = Math.min(...data);
+        const range = maxValue - minValue || 1;
+        
+        // 计算缩放因子
+        const scaleY = 50 / (range * 1.2);
+        const scaleX = 320 / beamLength;
+        
+        // 计算零线位置（SVG坐标系的原点）
+        const zeroY = 0;
+        
+        // 绘制零线（虚线）
+        const zeroLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        zeroLine.setAttribute('x1', '0');
+        zeroLine.setAttribute('y1', zeroY);
+        zeroLine.setAttribute('x2', '320');
+        zeroLine.setAttribute('y2', zeroY);
+        zeroLine.setAttribute('stroke', '#999');
+        zeroLine.setAttribute('stroke-width', '1');
+        zeroLine.setAttribute('stroke-dasharray', '5,5');
+        group.appendChild(zeroLine);
+        
+        // 绘制数据线
+        const pathData = data.map((value, index) => {
+            const x = index * (320 / (data.length - 1));
+            const y = -value * scaleY; // 直接映射到SVG坐标系
+            return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+        }).join(' ');
+        
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathData);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', diagram.color);
+        path.setAttribute('stroke-width', '2');
+        group.appendChild(path);
+        
+        // 添加填充区域
+        const fillPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const fillPathData = pathData + ` L 320 ${zeroY} L 0 ${zeroY} Z`;
+        fillPath.setAttribute('d', fillPathData);
+        fillPath.setAttribute('fill', diagram.color);
+        fillPath.setAttribute('fill-opacity', '0.2');
+        fillPath.setAttribute('stroke', 'none');
+        group.appendChild(fillPath);
+        
+        // 添加数值标注
+        const maxValueInData = Math.max(...data);
+        const minValueInData = Math.min(...data);
+        const maxIndex = data.indexOf(maxValueInData);
+        const minIndex = data.indexOf(minValueInData);
+        
+        if (maxIndex !== -1) {
+            const maxX = maxIndex * (320 / (data.length - 1));
+            const maxY = -maxValueInData * scaleY;
+            const maxText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            maxText.setAttribute('x', maxX);
+            maxText.setAttribute('y', maxY - 5);
+            maxText.setAttribute('text-anchor', 'middle');
+            maxText.setAttribute('font-size', '10');
+            maxText.setAttribute('fill', diagram.color);
+            maxText.textContent = maxValueInData.toFixed(2);
+            group.appendChild(maxText);
+        }
+        
+        if (minIndex !== -1 && minValueInData !== maxValueInData) {
+            const minX = minIndex * (320 / (data.length - 1));
+            const minY = -minValueInData * scaleY;
+            const minText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            minText.setAttribute('x', minX);
+            minText.setAttribute('y', minY + 15);
+            minText.setAttribute('text-anchor', 'middle');
+            minText.setAttribute('font-size', '10');
+            minText.setAttribute('fill', diagram.color);
+            minText.textContent = minValueInData.toFixed(2);
+            group.appendChild(minText);
+        }
+        
+        // 添加刻度线
+        const numTicks = 5;
+        for (let i = 0; i <= numTicks; i++) {
+            const x = (i / numTicks) * 320;
+            const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            tick.setAttribute('x1', x);
+            tick.setAttribute('y1', -3);
+            tick.setAttribute('x2', x);
+            tick.setAttribute('y2', 3);
+            tick.setAttribute('stroke', '#333');
+            tick.setAttribute('stroke-width', '1');
+            group.appendChild(tick);
+            
+            const tickText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            tickText.setAttribute('x', x);
+            tickText.setAttribute('y', 20);
+            tickText.setAttribute('text-anchor', 'middle');
+            tickText.setAttribute('font-size', '8');
+            tickText.setAttribute('fill', '#333');
+            tickText.textContent = ((i / numTicks) * beamLength).toFixed(1);
+            group.appendChild(tickText);
+        }
+        
+        gridContainer.appendChild(diagramContainer);
+    });
+    
+    container.appendChild(gridContainer);
+}
+window.drawInternalForcesDiagram = drawInternalForcesDiagram;
+

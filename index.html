@@ -20,6 +20,9 @@
                     <a class="nav-link active" data-bs-toggle="tab" href="#global">全局定义</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#geometry">几何</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" data-bs-toggle="tab" href="#force">外力</a>
                 </li>
                 <li class="nav-item">
@@ -64,7 +67,35 @@
                                     <option value="mm">mm</option>
                                 </select>
                             </div>
-                            <button id="applyUnits" class="btn btn-primary">应用全局单位</button>
+                            <button id="applyUnits" class="btn btn-primary" onclick="applyGlobalUnits()">应用全局单位</button>
+                        </div>
+                        
+                        <!-- 几何标签页 -->
+                        <div class="tab-pane fade" id="geometry">
+                            <h4>几何</h4>
+                            <div class="mb-3">
+                                <label for="beam-start" class="form-label">梁起点坐标:</label>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <input type="text" id="beam-start-x" class="form-control" placeholder="X坐标" value="0">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="text" id="beam-start-y" class="form-control" placeholder="Y坐标" value="0">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="beam-end" class="form-label">梁终点坐标:</label>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <input type="text" id="beam-end-x" class="form-control" placeholder="X坐标" value="1">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="text" id="beam-end-y" class="form-control" placeholder="Y坐标" value="0">
+                                    </div>
+                                </div>
+                            </div>
+                            <button id="preview-beam" class="btn btn-primary">预览</button>
                         </div>
                         
                         <!-- 外力标签页 -->
@@ -88,17 +119,25 @@
                                 <!-- 集中力输入 -->
                                 <div class="tab-pane fade show active" id="force-input">
                                     <div class="mb-3">
-                                        <label for="force-magnitude" class="form-label">大小:</label>
-                                        <input type="text" id="force-magnitude" class="form-control" placeholder="例如: 100 或 2*50">
+                                        <label for="force-value" class="form-label">大小:</label>
+                                        <input type="text" id="force-value" class="form-control" placeholder="例如: 100 或 2*50">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="force-position" class="form-label">作用点坐标:</label>
+                                        <label for="force-unit" class="form-label">单位:</label>
+                                        <select id="force-unit" class="form-select">
+                                            <option value="N">N</option>
+                                            <option value="kN">kN</option>
+                                            <option value="MN">MN</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="force-place" class="form-label">作用点坐标:</label>
                                         <div class="row">
                                             <div class="col-md-6">
-                                                <input type="text" id="force-position-x" class="form-control" placeholder="X坐标" value="0">
+                                                <input type="text" id="force-place-x" class="form-control" placeholder="X坐标" value="0">
                                             </div>
                                             <div class="col-md-6">
-                                                <input type="text" id="force-position-y" class="form-control" placeholder="Y坐标" value="0">
+                                                <input type="text" id="force-place-y" class="form-control" placeholder="Y坐标" value="0">
                                             </div>
                                         </div>
                                     </div>
@@ -127,23 +166,31 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <button id="add-force" class="btn btn-primary">添加集中力</button>
+                                    <button id="add-force" class="btn btn-primary" onclick="addForce()">添加集中力</button>
                                 </div>
                                 
                                 <!-- 集中力矩输入 -->
                                 <div class="tab-pane fade" id="moment-input">
                                     <div class="mb-3">
-                                        <label for="moment-magnitude" class="form-label">大小:</label>
-                                        <input type="text" id="moment-magnitude" class="form-control" placeholder="例如: 100 或 2*50">
+                                        <label for="moment-value" class="form-label">大小:</label>
+                                        <input type="text" id="moment-value" class="form-control" placeholder="例如: 100 或 2*50">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="moment-position" class="form-label">作用点坐标:</label>
+                                        <label for="moment-unit" class="form-label">单位:</label>
+                                        <select id="moment-unit" class="form-select">
+                                            <option value="N·m">N·m</option>
+                                            <option value="kN·m">kN·m</option>
+                                            <option value="MN·m">MN·m</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="moment-place" class="form-label">作用点坐标:</label>
                                         <div class="row">
                                             <div class="col-md-6">
-                                                <input type="text" id="moment-position-x" class="form-control" placeholder="X坐标" value="0">
+                                                <input type="text" id="moment-place-x" class="form-control" placeholder="X坐标" value="0">
                                             </div>
                                             <div class="col-md-6">
-                                                <input type="text" id="moment-position-y" class="form-control" placeholder="Y坐标" value="0">
+                                                <input type="text" id="moment-place-y" class="form-control" placeholder="Y坐标" value="0">
                                             </div>
                                         </div>
                                     </div>
@@ -154,14 +201,22 @@
                                             <option value="-1">逆时针</option>
                                         </select>
                                     </div>
-                                    <button id="add-moment" class="btn btn-primary">添加集中力矩</button>
+                                    <button id="add-moment" class="btn btn-primary" onclick="addMoment()">添加集中力矩</button>
                                 </div>
                                 
                                 <!-- 分布力输入 -->
                                 <div class="tab-pane fade" id="distributed-force-input">
                                     <div class="mb-3">
-                                        <label for="distributed-force-magnitude" class="form-label">集度大小:</label>
-                                        <input type="text" id="distributed-force-magnitude" class="form-control" placeholder="例如: 100 或 2*50">
+                                        <label for="distributed-force-value" class="form-label">集度大小:</label>
+                                        <input type="text" id="distributed-force-value" class="form-control" placeholder="例如: 100 或 2*50">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="distributed-force-unit" class="form-label">单位:</label>
+                                        <select id="distributed-force-unit" class="form-select">
+                                            <option value="N">N</option>
+                                            <option value="kN">kN</option>
+                                            <option value="MN">MN</option>
+                                        </select>
                                     </div>
                                     <div class="mb-3">
                                         <label for="distributed-force-start" class="form-label">起点坐标:</label>
@@ -189,16 +244,16 @@
                                         <label class="form-label">方向:</label>
                                         <div class="row mb-2">
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDistributedForceDirection('+X')">+X</button>
+                                                <button class="btn btn-secondary w-100" onclick="setDirection('+X')">+X</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDistributedForceDirection('-X')">-X</button>
+                                                <button class="btn btn-secondary w-100" onclick="setDirection('-X')">-X</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDistributedForceDirection('+Y')">+Y</button>
+                                                <button class="btn btn-secondary w-100" onclick="setDirection('+Y')">+Y</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDistributedForceDirection('-Y')">-Y</button>
+                                                <button class="btn btn-secondary w-100" onclick="setDirection('-Y')">-Y</button>
                                             </div>
                                         </div>
                                         <div class="row">
@@ -210,14 +265,22 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <button id="add-distributed-force" class="btn btn-primary">添加分布力</button>
+                                    <button id="add-distributed-force" class="btn btn-primary" onclick="addDistributedForce()">添加分布力</button>
                                 </div>
                                 
                                 <!-- 分布力矩输入 -->
                                 <div class="tab-pane fade" id="distributed-moment-input">
                                     <div class="mb-3">
-                                        <label for="distributed-moment-magnitude" class="form-label">集度大小:</label>
-                                        <input type="text" id="distributed-moment-magnitude" class="form-control" placeholder="例如: 100 或 2*50">
+                                        <label for="distributed-moment-value" class="form-label">集度大小:</label>
+                                        <input type="text" id="distributed-moment-value" class="form-control" placeholder="例如: 100 或 2*50">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="distributed-moment-unit" class="form-label">单位:</label>
+                                        <select id="distributed-moment-unit" class="form-select">
+                                            <option value="N·m">N·m</option>
+                                            <option value="kN·m">kN·m</option>
+                                            <option value="MN·m">MN·m</option>
+                                        </select>
                                     </div>
                                     <div class="mb-3">
                                         <label for="distributed-moment-start" class="form-label">起点坐标:</label>
@@ -248,7 +311,7 @@
                                             <option value="-1">逆时针</option>
                                         </select>
                                     </div>
-                                    <button id="add-distributed-moment" class="btn btn-primary">添加分布力矩</button>
+                                    <button id="add-distributed-moment" class="btn btn-primary" onclick="addDistributedMoment()">添加分布力矩</button>
                                 </div>
                             </div>
                         </div>
@@ -281,7 +344,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <button id="add-fixed-hinge" class="btn btn-primary">添加固定铰</button>
+                                    <button id="add-fixed-hinge" class="btn btn-primary" onclick="addFixedHinge()">添加固定铰</button>
                                 </div>
                                 
                                 <!-- 滑动铰输入 -->
@@ -301,16 +364,16 @@
                                         <label class="form-label">滑动方向:</label>
                                         <div class="row mb-2">
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setSlidingDirection('+X')">+X</button>
+                                                <button class="btn btn-secondary w-100" onclick="setDirection('+X')">+X</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setSlidingDirection('-X')">-X</button>
+                                                <button class="btn btn-secondary w-100" onclick="setDirection('-X')">-X</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setSlidingDirection('+Y')">+Y</button>
+                                                <button class="btn btn-secondary w-100" onclick="setDirection('+Y')">+Y</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setSlidingDirection('-Y')">-Y</button>
+                                                <button class="btn btn-secondary w-100" onclick="setDirection('-Y')">-Y</button>
                                             </div>
                                         </div>
                                         <div class="row">
@@ -322,7 +385,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <button id="add-sliding-hinge" class="btn btn-primary">添加滑动铰</button>
+                                    <button id="add-sliding-hinge" class="btn btn-primary" onclick="addSlidingHinge()">添加滑动铰</button>
                                 </div>
                                 
                                 <!-- 固定支座输入 -->
@@ -338,7 +401,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <button id="add-fixed" class="btn btn-primary">添加固定支座</button>
+                                    <button id="add-fixed" class="btn btn-primary" onclick="addFixed()">添加固定支座</button>
                                 </div>
                             </div>
                         </div>
@@ -379,6 +442,9 @@
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="constraint-tab" data-bs-toggle="tab" data-bs-target="#result-constraint" type="button" role="tab">约束力</button>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="internal-forces-tab" data-bs-toggle="tab" data-bs-target="#result-internal-forces" type="button" role="tab">内力图</button>
+                            </li>
                         </ul>
                     </div>
                     <div class="tab-content" id="resultTabsContent">
@@ -388,6 +454,9 @@
                         <div class="tab-pane fade" id="result-constraint">
                             <div id="result" class="result-content"></div>
                         </div>
+                        <div class="tab-pane fade" id="result-internal-forces">
+                            <div id="internal-forces" class="result-content"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -396,6 +465,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.2"></script>
+    <script src="solver.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
