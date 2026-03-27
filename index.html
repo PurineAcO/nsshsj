@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>静力学求解器</title>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header bg-primary text-white text-center">
+                <h1>静力学求解器</h1>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="mechanicsTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="force-tab" data-bs-toggle="tab" data-bs-target="#force" type="button" role="tab" aria-controls="force" aria-selected="true">外力</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="torque-tab" data-bs-toggle="tab" data-bs-target="#torque" type="button" role="tab" aria-controls="torque" aria-selected="false">外力矩</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="fenbu-tab" data-bs-toggle="tab" data-bs-target="#fenbu" type="button" role="tab" aria-controls="fenbu" aria-selected="false">分布力</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="fenbutorque-tab" data-bs-toggle="tab" data-bs-target="#fenbutorque" type="button" role="tab" aria-controls="fenbutorque" aria-selected="false">分布力矩</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="hdjzz-tab" data-bs-toggle="tab" data-bs-target="#hdjzz" type="button" role="tab" aria-controls="hdjzz" aria-selected="false">滑动铰</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="gdjzz-tab" data-bs-toggle="tab" data-bs-target="#gdjzz" type="button" role="tab" aria-controls="gdjzz" aria-selected="false">固定铰</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="gz-tab" data-bs-toggle="tab" data-bs-target="#gz" type="button" role="tab" aria-controls="gz" aria-selected="false">固定支座</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="mechanicsTabsContent">
+                    <!-- 外力标签页 -->
+                    <div class="tab-pane fade show active" id="force" role="tabpanel" aria-labelledby="force-tab">
+                        <div class="form-group">
+                            <label for="force-count">外力数量：</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="force-count" min="0" value="0">
+                                <button class="btn btn-primary" onclick="addForceFields()">确认</button>
+                            </div>
+                        </div>
+                        <div id="force-fields"></div>
+                    </div>
+                    
+                    <!-- 外力矩标签页 -->
+                    <div class="tab-pane fade" id="torque" role="tabpanel" aria-labelledby="torque-tab">
+                        <div class="form-group">
+                            <label for="torque-count">外力矩数量：</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="torque-count" min="0" value="0">
+                                <button class="btn btn-primary" onclick="addTorqueFields()">确认</button>
+                            </div>
+                        </div>
+                        <div id="torque-fields"></div>
+                    </div>
+                    
+                    <!-- 分布力标签页 -->
+                    <div class="tab-pane fade" id="fenbu" role="tabpanel" aria-labelledby="fenbu-tab">
+                        <div class="form-group">
+                            <label for="fenbu-count">分布力数量：</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="fenbu-count" min="0" value="0">
+                                <button class="btn btn-primary" onclick="addFenbuFields()">确认</button>
+                            </div>
+                        </div>
+                        <div id="fenbu-fields"></div>
+                    </div>
+                    
+                    <!-- 分布力矩标签页 -->
+                    <div class="tab-pane fade" id="fenbutorque" role="tabpanel" aria-labelledby="fenbutorque-tab">
+                        <div class="form-group">
+                            <label for="fenbutorque-count">分布力矩数量：</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="fenbutorque-count" min="0" value="0">
+                                <button class="btn btn-primary" onclick="addFenbutorqueFields()">确认</button>
+                            </div>
+                        </div>
+                        <div id="fenbutorque-fields"></div>
+                    </div>
+                    
+                    <!-- 滑动铰标签页 -->
+                    <div class="tab-pane fade" id="hdjzz" role="tabpanel" aria-labelledby="hdjzz-tab">
+                        <div class="form-group">
+                            <label for="hdjzz-count">滑动铰数量：</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="hdjzz-count" min="0" value="0">
+                                <button class="btn btn-primary" onclick="addHdjzzFields()">确认</button>
+                            </div>
+                        </div>
+                        <div id="hdjzz-fields"></div>
+                    </div>
+                    
+                    <!-- 固定铰标签页 -->
+                    <div class="tab-pane fade" id="gdjzz" role="tabpanel" aria-labelledby="gdjzz-tab">
+                        <div class="form-group">
+                            <label for="gdjzz-count">固定铰数量：</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="gdjzz-count" min="0" value="0">
+                                <button class="btn btn-primary" onclick="addGdjzzFields()">确认</button>
+                            </div>
+                        </div>
+                        <div id="gdjzz-fields"></div>
+                    </div>
+                    
+                    <!-- 固定支座标签页 -->
+                    <div class="tab-pane fade" id="gz" role="tabpanel" aria-labelledby="gz-tab">
+                        <div class="form-group">
+                            <label for="gz-count">固定支座数量：</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="gz-count" min="0" value="0">
+                                <button class="btn btn-primary" onclick="addGzFields()">确认</button>
+                            </div>
+                        </div>
+                        <div id="gz-fields"></div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <button class="btn btn-primary btn-lg" onclick="solve()">求解</button>
+                </div>
+                
+                <div class="result-area mt-4">
+                    <h4>求解结果</h4>
+                    <div id="result"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
