@@ -28,6 +28,20 @@ function applyGlobalUnits() {
     logTab.show();
 }
 
+// 标签页切换事件
+document.addEventListener('DOMContentLoaded', function() {
+    // 监听所有标签页切换事件（大标签页和子标签页）
+    document.addEventListener('shown.bs.tab', function(event) {
+        // 切换标签页后更新显示
+        console.log('Tab switched, updating objects display');
+        console.log('Mechanics objects count:', mechanicsObjects.length);
+        displayObjects();
+    });
+    
+    // 初始显示
+    displayObjects();
+});
+
 // 核心：解析坐标点
 function parsePoint(x, y) {
     return [parseExpression(x), parseExpression(y)];
@@ -160,6 +174,9 @@ function addForce() {
         
         mechanicsObjects.push(force);
         
+        // 显示已添加的对象
+        displayObjects();
+        
         // 在日志中显示
         const logDiv = document.getElementById('log');
         logDiv.innerHTML = '<h5>【操作日志】</h5>';
@@ -204,6 +221,9 @@ function addMoment() {
         };
         
         mechanicsObjects.push(moment);
+        
+        // 显示已添加的对象
+        displayObjects();
         
         // 在日志中显示
         const logDiv = document.getElementById('log');
@@ -257,6 +277,9 @@ function addDistributedForce() {
         
         mechanicsObjects.push(distributedForce);
         
+        // 显示已添加的对象
+        displayObjects();
+        
         // 在日志中显示
         const logDiv = document.getElementById('log');
         logDiv.innerHTML = '<h5>【操作日志】</h5>';
@@ -309,6 +332,9 @@ function addDistributedMoment() {
         
         mechanicsObjects.push(distributedMoment);
         
+        // 显示已添加的对象
+        displayObjects();
+        
         // 在日志中显示
         const logDiv = document.getElementById('log');
         logDiv.innerHTML = '<h5>【操作日志】</h5>';
@@ -348,6 +374,9 @@ function addFixedHinge() {
         };
         
         mechanicsObjects.push(fixedHinge);
+        
+        // 显示已添加的对象
+        displayObjects();
         
         // 在日志中显示
         const logDiv = document.getElementById('log');
@@ -390,6 +419,9 @@ function addSlidingHinge() {
         
         mechanicsObjects.push(slidingHinge);
         
+        // 显示已添加的对象
+        displayObjects();
+        
         // 在日志中显示
         const logDiv = document.getElementById('log');
         logDiv.innerHTML = '<h5>【操作日志】</h5>';
@@ -419,7 +451,7 @@ function addFixed() {
         const positionY = parseExpression(document.getElementById('fixed-position-y').value);
         
         const fixed = {
-            type: 'gz',
+            type: 'gdzz',
             place: [
                 convertLengthUnit(positionX, globalUnits.length),
                 convertLengthUnit(positionY, globalUnits.length)
@@ -428,6 +460,9 @@ function addFixed() {
         };
         
         mechanicsObjects.push(fixed);
+        
+        // 显示已添加的对象
+        displayObjects();
         
         // 在日志中显示
         const logDiv = document.getElementById('log');
@@ -457,7 +492,7 @@ class Solver {
         this.n = n;
         this.restrictioncnt = 3 * n;
         this.matrixcnt = 0;
-        this.restrictiondic = { gdjzz: [], hdjzz: [], gz: [] };
+        this.restrictiondic = { gdjzz: [], hdjzz: [], gdzz: [] };
         // 直接初始化数组，而不是使用math.zeros
         this.beta = [[0], [0], [0]];
         this.A = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
@@ -468,9 +503,9 @@ class Solver {
             if (obj.type === 'gdjzz') {
                 this.restrictioncnt -= 2;
                 this.restrictiondic.gdjzz.push(obj);
-            } else if (obj.type === 'gz') {
+            } else if (obj.type === 'gdzz') {
                 this.restrictioncnt -= 3;
-                this.restrictiondic.gz.push(obj);
+                this.restrictiondic.gdzz.push(obj);
             } else if (obj.type === 'hdjzz') {
                 this.restrictioncnt -= 1;
                 this.restrictiondic.hdjzz.push(obj);
@@ -528,7 +563,7 @@ class Solver {
             this.matrixcnt += 1;
         }
         
-        for (const obj of this.restrictiondic.gz) {
+        for (const obj of this.restrictiondic.gdzz) {
             this.A[0][this.matrixcnt] = 1;
             this.A[1][this.matrixcnt] = 0;
             this.A[2][this.matrixcnt] = -obj.place[1];
@@ -570,7 +605,7 @@ function getObjectTypeName(type) {
         'fenbutorque': '分布力矩',
         'hdjzz': '滑动铰',
         'gdjzz': '固定铰',
-        'gz': '固定支座'
+        'gdzz': '固定支座'
     };
     return typeMap[type] || type;
 }
@@ -606,7 +641,7 @@ function showObjectConfirmation() {
                 confirmationHTML += `<p>位置：(${obj.place[0].toFixed(3)}, ${obj.place[1].toFixed(3)}) m，方向：(${obj.direc[0]}, ${obj.direc[1]})</p>`;
             } else if (obj.type === 'gdjzz') {
                 confirmationHTML += `<p>位置：(${obj.place[0].toFixed(3)}, ${obj.place[1].toFixed(3)}) m</p>`;
-            } else if (obj.type === 'gz') {
+            } else if (obj.type === 'gdzz') {
                 confirmationHTML += `<p>位置：(${obj.place[0].toFixed(3)}, ${obj.place[1].toFixed(3)}) m</p>`;
             }
             confirmationHTML += '</div>';
@@ -661,7 +696,7 @@ function solve() {
                     constraints += 2;
                 } else if (obj.type === 'hdjzz') {
                     constraints += 1;
-                } else if (obj.type === 'gz') {
+                } else if (obj.type === 'gdzz') {
                     constraints += 3;
                 }
             });
@@ -722,7 +757,7 @@ function solve() {
             
             // 最后处理固定支座
             mechanicsObjects.forEach(obj => {
-                if (obj.type === 'gz') {
+                if (obj.type === 'gdzz') {
                     resultLabels.push('固定支座 (位置: (' + obj.place[0].toFixed(3) + ', ' + obj.place[1].toFixed(3) + ') m) X方向约束力');
                     resultLabels.push('固定支座 (位置: (' + obj.place[0].toFixed(3) + ', ' + obj.place[1].toFixed(3) + ') m) Y方向约束力');
                     resultLabels.push('固定支座 (位置: (' + obj.place[0].toFixed(3) + ', ' + obj.place[1].toFixed(3) + ') m) 约束力矩');
@@ -900,7 +935,7 @@ function visualizeModel() {
             line.setAttribute('stroke-width', '2');
             line.setAttribute('stroke-dasharray', '5,5');
             svg.appendChild(line);
-        } else if (obj.type === 'gz') {
+        } else if (obj.type === 'gdzz') {
             const [x, y] = toSVGCoord(obj.place[0], obj.place[1]);
             
             // 绘制固定支座
@@ -931,6 +966,235 @@ function visualizeModel() {
     visualizationDiv.appendChild(svg);
 }
 
+// 显示已添加的力学对象
+function displayObjects() {
+    const objectsList = document.getElementById('objects-list');
+    if (!objectsList) {
+        console.error('objects-list element not found');
+        return;
+    }
+    
+    objectsList.innerHTML = '';
+    
+    // 通过检查所有大标签页的class来确定当前活动的大标签页
+    const globalTab = document.getElementById('global');
+    const forceTab = document.getElementById('force');
+    const constraintTab = document.getElementById('constraint');
+    
+    let activeTabId = '';
+    if (globalTab && globalTab.classList.contains('active')) {
+        activeTabId = 'global';
+    } else if (forceTab && forceTab.classList.contains('active')) {
+        activeTabId = 'force';
+    } else if (constraintTab && constraintTab.classList.contains('active')) {
+        activeTabId = 'constraint';
+    }
+    
+    // 按类型分组
+    const forces = mechanicsObjects.filter(obj => obj.type === 'outerforce');
+    const moments = mechanicsObjects.filter(obj => obj.type === 'outertorque');
+    const distributedForces = mechanicsObjects.filter(obj => obj.type === 'fenbuforce');
+    const distributedMoments = mechanicsObjects.filter(obj => obj.type === 'fenbutorque');
+    const fixedHinges = mechanicsObjects.filter(obj => obj.type === 'gdjzz');
+    const slidingHinges = mechanicsObjects.filter(obj => obj.type === 'hdjzz');
+    const fixedSupports = mechanicsObjects.filter(obj => obj.type === 'gdzz');
+    
+    // 调试信息
+    console.log('Active tab:', activeTabId);
+    console.log('Mechanics objects count:', mechanicsObjects.length);
+    console.log('Forces:', forces.length);
+    console.log('Moments:', moments.length);
+    console.log('Distributed forces:', distributedForces.length);
+    console.log('Distributed moments:', distributedMoments.length);
+    console.log('Fixed hinges:', fixedHinges.length);
+    console.log('Sliding hinges:', slidingHinges.length);
+    console.log('Fixed supports:', fixedSupports.length);
+    
+    // 根据当前活动标签页显示对应的对象
+    if (activeTabId === 'force') {
+        // 显示力相关对象
+        // 显示集中力
+        if (forces.length > 0) {
+            const forcesSection = document.createElement('div');
+            forcesSection.className = 'mb-4';
+            forcesSection.innerHTML = `<h6>集中力 (${forces.length}个)</h6>`;
+            
+            forces.forEach((force, index) => {
+                const forceElement = document.createElement('div');
+                forceElement.className = 'card mb-2';
+                forceElement.innerHTML = `
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <p class="mb-0">值: ${force.originalValue || force.value} ${force.unit}, 作用点: (${force.place[0].toFixed(3)}, ${force.place[1].toFixed(3)}) ${force.lengthUnit}, 方向: (${force.direc[0]}, ${force.direc[1]})</p>
+                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(force)})">删除</button>
+                    </div>
+                `;
+                forcesSection.appendChild(forceElement);
+            });
+            
+            objectsList.appendChild(forcesSection);
+        }
+        
+        // 显示集中力矩
+        if (moments.length > 0) {
+            const momentsSection = document.createElement('div');
+            momentsSection.className = 'mb-4';
+            momentsSection.innerHTML = `<h6>集中力矩 (${moments.length}个)</h6>`;
+            
+            moments.forEach((moment, index) => {
+                const momentElement = document.createElement('div');
+                momentElement.className = 'card mb-2';
+                momentElement.innerHTML = `
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <p class="mb-0">值: ${moment.originalValue || moment.value} ${moment.unit}, 作用点: (${moment.place[0].toFixed(3)}, ${moment.place[1].toFixed(3)}) ${moment.lengthUnit}</p>
+                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(moment)})">删除</button>
+                    </div>
+                `;
+                momentsSection.appendChild(momentElement);
+            });
+            
+            objectsList.appendChild(momentsSection);
+        }
+        
+        // 显示分布力
+        if (distributedForces.length > 0) {
+            const distributedForcesSection = document.createElement('div');
+            distributedForcesSection.className = 'mb-4';
+            distributedForcesSection.innerHTML = `<h6>分布力 (${distributedForces.length}个)</h6>`;
+            
+            distributedForces.forEach((force, index) => {
+                const forceElement = document.createElement('div');
+                forceElement.className = 'card mb-2';
+                forceElement.innerHTML = `
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <p class="mb-0">集度: ${force.originalQ || force.q} ${force.unit}, 起点: (${force.start[0].toFixed(3)}, ${force.start[1].toFixed(3)}) ${force.lengthUnit}, 终点: (${force.end[0].toFixed(3)}, ${force.end[1].toFixed(3)}) ${force.lengthUnit}, 方向: (${force.direc[0]}, ${force.direc[1]})</p>
+                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(force)})">删除</button>
+                    </div>
+                `;
+                distributedForcesSection.appendChild(forceElement);
+            });
+            
+            objectsList.appendChild(distributedForcesSection);
+        }
+        
+        // 显示分布力矩
+        if (distributedMoments.length > 0) {
+            const distributedMomentsSection = document.createElement('div');
+            distributedMomentsSection.className = 'mb-4';
+            distributedMomentsSection.innerHTML = `<h6>分布力矩 (${distributedMoments.length}个)</h6>`;
+            
+            distributedMoments.forEach((moment, index) => {
+                const momentElement = document.createElement('div');
+                momentElement.className = 'card mb-2';
+                momentElement.innerHTML = `
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <p class="mb-0">力矩集度: ${moment.originalM || moment.m} ${moment.unit}, 起点: (${moment.start[0].toFixed(3)}, ${moment.start[1].toFixed(3)}) ${moment.lengthUnit}, 终点: (${moment.end[0].toFixed(3)}, ${moment.end[1].toFixed(3)}) ${moment.lengthUnit}</p>
+                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(moment)})">删除</button>
+                    </div>
+                `;
+                distributedMomentsSection.appendChild(momentElement);
+            });
+            
+            objectsList.appendChild(distributedMomentsSection);
+        }
+    } else if (activeTabId === 'constraint') {
+        // 显示约束相关对象
+        // 显示固定铰
+        if (fixedHinges.length > 0) {
+            const fixedHingesSection = document.createElement('div');
+            fixedHingesSection.className = 'mb-4';
+            fixedHingesSection.innerHTML = `<h6>固定铰 (${fixedHinges.length}个)</h6>`;
+            
+            fixedHinges.forEach((hinge, index) => {
+                const hingeElement = document.createElement('div');
+                hingeElement.className = 'card mb-2';
+                hingeElement.innerHTML = `
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <p class="mb-0">位置: (${hinge.place[0].toFixed(3)}, ${hinge.place[1].toFixed(3)}) ${hinge.lengthUnit}</p>
+                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(hinge)})">删除</button>
+                    </div>
+                `;
+                fixedHingesSection.appendChild(hingeElement);
+            });
+            
+            objectsList.appendChild(fixedHingesSection);
+        }
+        
+        // 显示滑动铰
+        if (slidingHinges.length > 0) {
+            const slidingHingesSection = document.createElement('div');
+            slidingHingesSection.className = 'mb-4';
+            slidingHingesSection.innerHTML = `<h6>滑动铰 (${slidingHinges.length}个)</h6>`;
+            
+            slidingHinges.forEach((hinge, index) => {
+                const hingeElement = document.createElement('div');
+                hingeElement.className = 'card mb-2';
+                hingeElement.innerHTML = `
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <p class="mb-0">位置: (${hinge.place[0].toFixed(3)}, ${hinge.place[1].toFixed(3)}) ${hinge.lengthUnit}, 方向: (${hinge.direc[0]}, ${hinge.direc[1]})</p>
+                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(hinge)})">删除</button>
+                    </div>
+                `;
+                slidingHingesSection.appendChild(hingeElement);
+            });
+            
+            objectsList.appendChild(slidingHingesSection);
+        }
+        
+        // 显示固定支座
+        if (fixedSupports.length > 0) {
+            const fixedSupportsSection = document.createElement('div');
+            fixedSupportsSection.className = 'mb-4';
+            fixedSupportsSection.innerHTML = `<h6>固定支座 (${fixedSupports.length}个)</h6>`;
+            
+            fixedSupports.forEach((support, index) => {
+                const supportElement = document.createElement('div');
+                supportElement.className = 'card mb-2';
+                supportElement.innerHTML = `
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <p class="mb-0">位置: (${support.place[0].toFixed(3)}, ${support.place[1].toFixed(3)}) ${support.lengthUnit}</p>
+                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(support)})">删除</button>
+                    </div>
+                `;
+                fixedSupportsSection.appendChild(supportElement);
+            });
+            
+            objectsList.appendChild(fixedSupportsSection);
+        }
+    }
+    
+    // 如果没有对象，显示提示
+    if (objectsList.innerHTML === '') {
+        objectsList.innerHTML = '<p class="text-muted">暂无添加的对象</p>';
+    }
+}
+
+// 删除对象
+function deleteObject(index) {
+    mechanicsObjects.splice(index, 1);
+    displayObjects();
+    
+    // 在日志中显示
+    const logDiv = document.getElementById('log');
+    logDiv.innerHTML = '<h5>【操作日志】</h5>';
+    logDiv.innerHTML += `<p>对象删除成功！</p>`;
+    
+    // 切换到日志标签页
+    const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
+    logTab.show();
+}
+
+// 编辑对象（简化版，实际应用中需要创建编辑表单）
+function editObject(index) {
+    // 在日志中显示
+    const logDiv = document.getElementById('log');
+    logDiv.innerHTML = '<h5>【操作日志】</h5>';
+    logDiv.innerHTML += `<p>编辑功能暂未实现，敬请期待！</p>`;
+    
+    // 切换到日志标签页
+    const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
+    logTab.show();
+}
+
 // 页面加载完成后绑定事件监听器
 document.addEventListener('DOMContentLoaded', function() {
     // 绑定应用全局单位按钮
@@ -946,4 +1210,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('add-fixed-hinge').addEventListener('click', addFixedHinge);
     document.getElementById('add-sliding-hinge').addEventListener('click', addSlidingHinge);
     document.getElementById('add-fixed').addEventListener('click', addFixed);
+    
+    // 显示已添加的对象
+    displayObjects();
 });
