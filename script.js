@@ -65,9 +65,32 @@ document.addEventListener('DOMContentLoaded', function() {
         previewBeam();
     });
     
+    // 初始化梁方向按钮样式
+    setBeamDirection('+X');
+    
+    // 初始化力、分布力和滑动铰的方向按钮样式
+    setDirection('+X');
+    
     // 初始显示
     displayObjects();
 });
+
+// 设置梁的方向
+function setBeamDirection(direction) {
+    document.getElementById('beam-direction').value = direction;
+    
+    // 更新方向按钮的样式
+    const buttons = document.querySelectorAll('.beam-direction-btn');
+    buttons.forEach(button => {
+        if (button.dataset.direction === direction) {
+            button.classList.remove('btn-secondary');
+            button.classList.add('btn-primary');
+        } else {
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-secondary');
+        }
+    });
+}
 
 // 根据预设方向更新方向输入字段
 function setDirection(direction) {
@@ -105,6 +128,18 @@ function setDirection(direction) {
             document.getElementById('sliding-hinge-direction-y').value = '-1';
             break;
     }
+    
+    // 更新所有方向按钮的样式
+    const buttons = document.querySelectorAll('.direction-btn');
+    buttons.forEach(button => {
+        if (button.dataset.direction === direction) {
+            button.classList.remove('btn-secondary');
+            button.classList.add('btn-primary');
+        } else {
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-secondary');
+        }
+    });
 }
 // 添加集中力
 function addForce() {
@@ -155,6 +190,14 @@ function addForce() {
         logDiv.innerHTML += `<p>作用点：(${placeX.toFixed(2)}, ${placeY.toFixed(2)})</p>`;
         logDiv.innerHTML += `<p>方向：(${direcX.toFixed(2)}, ${direcY.toFixed(2)})</p>`;
         
+        // 清空输入字段
+        document.getElementById('force-value').value = '';
+        document.getElementById('force-place-x').value = '0';
+        document.getElementById('force-place-y').value = '0';
+        document.getElementById('force-direction-x').value = '1';
+        document.getElementById('force-direction-y').value = '0';
+        setDirection('+X');
+        
         // 切换到日志标签页
         const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
         logTab.show();
@@ -204,6 +247,11 @@ function addMoment() {
         logDiv.innerHTML += `<p>集中力矩添加成功！</p>`;
         logDiv.innerHTML += `<p>值：${value} ${unit}</p>`;
         logDiv.innerHTML += `<p>作用点：(${placeX.toFixed(2)}, ${placeY.toFixed(2)})</p>`;
+        
+        // 清空输入字段
+        document.getElementById('moment-value').value = '';
+        document.getElementById('moment-place-x').value = '0';
+        document.getElementById('moment-place-y').value = '0';
         
         // 切换到日志标签页
         const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
@@ -273,6 +321,16 @@ function addDistributedForce() {
         logDiv.innerHTML += `<p>终点：(${endX.toFixed(2)}, ${endY.toFixed(2)})</p>`;
         logDiv.innerHTML += `<p>方向：(${direcX.toFixed(2)}, ${direcY.toFixed(2)})</p>`;
         
+        // 清空输入字段
+        document.getElementById('distributed-force-value').value = '';
+        document.getElementById('distributed-force-start-x').value = '0';
+        document.getElementById('distributed-force-start-y').value = '0';
+        document.getElementById('distributed-force-end-x').value = '0';
+        document.getElementById('distributed-force-end-y').value = '0';
+        document.getElementById('distributed-force-direction-x').value = '0';
+        document.getElementById('distributed-force-direction-y').value = '1';
+        setDirection('+Y');
+        
         // 切换到日志标签页
         const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
         logTab.show();
@@ -288,59 +346,7 @@ function addDistributedForce() {
     }
 }
 
-// 添加分布力矩
-function addDistributedMoment() {
-    try {
-        // 获取输入值
-        const m = parseExpression(document.getElementById('distributed-moment-value').value);
-        const unit = document.getElementById('distributed-moment-unit').value;
-        const startX = parseExpression(document.getElementById('distributed-moment-start-x').value);
-        const startY = parseExpression(document.getElementById('distributed-moment-start-y').value);
-        const endX = parseExpression(document.getElementById('distributed-moment-end-x').value);
-        const endY = parseExpression(document.getElementById('distributed-moment-end-y').value);
-        
-        // 转换单位
-        const convertedM = convertTorqueUnit(m, unit);
-        
-        // 创建分布力矩对象
-        const distributedMoment = {
-            type: 'fenbutorque',
-            m: convertedM,
-            originalM: m,
-            unit: unit,
-            start: [startX, startY],
-            end: [endX, endY],
-            lengthUnit: globalUnits.length
-        };
-        
-        // 添加到力学对象列表
-        mechanicsObjects.push(distributedMoment);
-        
-        // 更新显示
-        displayObjects();
-        
-        // 在日志中显示
-        const logDiv = document.getElementById('log');
-        logDiv.innerHTML = '<h5>【操作日志】</h5>';
-        logDiv.innerHTML += `<p>分布力矩添加成功！</p>`;
-        logDiv.innerHTML += `<p>集度：${m} ${unit}</p>`;
-        logDiv.innerHTML += `<p>起点：(${startX.toFixed(2)}, ${startY.toFixed(2)})</p>`;
-        logDiv.innerHTML += `<p>终点：(${endX.toFixed(2)}, ${endY.toFixed(2)})</p>`;
-        
-        // 切换到日志标签页
-        const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
-        logTab.show();
-    } catch (e) {
-        // 在日志中显示错误
-        const logDiv = document.getElementById('log');
-        logDiv.innerHTML = '<h5>【操作日志】</h5>';
-        logDiv.innerHTML += `<div class="alert alert-danger">添加分布力矩错误：${e.message}</div>`;
-        
-        // 切换到日志标签页
-        const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
-        logTab.show();
-    }
-}
+
 
 // 添加固定铰
 function addFixedHinge() {
@@ -367,6 +373,10 @@ function addFixedHinge() {
         logDiv.innerHTML = '<h5>【操作日志】</h5>';
         logDiv.innerHTML += `<p>固定铰添加成功！</p>`;
         logDiv.innerHTML += `<p>位置：(${placeX.toFixed(2)}, ${placeY.toFixed(2)})</p>`;
+        
+        // 清空输入字段
+        document.getElementById('fixed-hinge-position-x').value = '0';
+        document.getElementById('fixed-hinge-position-y').value = '0';
         
         // 切换到日志标签页
         const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
@@ -423,6 +433,13 @@ function addSlidingHinge() {
         logDiv.innerHTML += `<p>位置：(${placeX.toFixed(2)}, ${placeY.toFixed(2)})</p>`;
         logDiv.innerHTML += `<p>方向：(${direcX.toFixed(2)}, ${direcY.toFixed(2)})</p>`;
         
+        // 清空输入字段
+        document.getElementById('sliding-hinge-position-x').value = '0';
+        document.getElementById('sliding-hinge-position-y').value = '0';
+        document.getElementById('sliding-hinge-direction-x').value = '1';
+        document.getElementById('sliding-hinge-direction-y').value = '0';
+        setDirection('+X');
+        
         // 切换到日志标签页
         const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
         logTab.show();
@@ -463,6 +480,10 @@ function addFixed() {
         logDiv.innerHTML = '<h5>【操作日志】</h5>';
         logDiv.innerHTML += `<p>固定支座添加成功！</p>`;
         logDiv.innerHTML += `<p>位置：(${placeX.toFixed(2)}, ${placeY.toFixed(2)})</p>`;
+        
+        // 清空输入字段
+        document.getElementById('fixed-position-x').value = '0';
+        document.getElementById('fixed-position-y').value = '0';
         
         // 切换到日志标签页
         const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
@@ -729,6 +750,13 @@ function visualizeModel() {
         return [svgX, svgY];
     }
     
+    // 转换坐标：将SVG坐标转换为力学模型坐标
+    function fromSVGCoord(svgX, svgY) {
+        const x = (svgX / 40) - 10;
+        const y = 10 - (svgY / 30);
+        return [x, y];
+    }
+    
     // 绘制力
     mechanicsObjects.forEach(obj => {
         if (obj.type === 'outerforce') {
@@ -855,6 +883,64 @@ function visualizeModel() {
                 anchor.setAttribute('fill', 'purple');
                 svg.appendChild(anchor);
             }
+        } else if (obj.type === 'beam') {
+            const [startX, startY] = toSVGCoord(obj.start[0], obj.start[1]);
+            const [endX, endY] = toSVGCoord(obj.end[0], obj.end[1]);
+            
+            // 绘制梁
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', startX);
+            line.setAttribute('y1', startY);
+            line.setAttribute('x2', endX);
+            line.setAttribute('y2', endY);
+            line.setAttribute('stroke', 'black');
+            line.setAttribute('stroke-width', '3');
+            svg.appendChild(line);
+            
+            // 绘制起点和终点
+            const startPoint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            startPoint.setAttribute('cx', startX);
+            startPoint.setAttribute('cy', startY);
+            startPoint.setAttribute('r', '5');
+            startPoint.setAttribute('fill', 'red');
+            svg.appendChild(startPoint);
+            
+            const endPoint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            endPoint.setAttribute('cx', endX);
+            endPoint.setAttribute('cy', endY);
+            endPoint.setAttribute('r', '5');
+            endPoint.setAttribute('fill', 'blue');
+            svg.appendChild(endPoint);
+        }
+    });
+    
+    // 添加点击事件，支持画布选点
+    svg.addEventListener('click', function(e) {
+        const rect = svg.getBoundingClientRect();
+        const svgX = e.clientX - rect.left;
+        const svgY = e.clientY - rect.top;
+        
+        // 转换为SVG内部坐标（考虑viewBox）
+        const viewBox = svg.getAttribute('viewBox').split(' ').map(Number);
+        const scaleX = viewBox[2] / rect.width;
+        const scaleY = viewBox[3] / rect.height;
+        const internalSVGX = svgX * scaleX;
+        const internalSVGY = svgY * scaleY;
+        
+        // 转换为力学模型坐标
+        const [modelX, modelY] = fromSVGCoord(internalSVGX, internalSVGY);
+        
+        // 查找当前活动的输入字段
+        const activeInput = document.activeElement;
+        if (activeInput && activeInput.type === 'text') {
+            // 检查是否是坐标输入字段
+            if (activeInput.id.includes('-x') || activeInput.id.includes('-y')) {
+                if (activeInput.id.includes('-x')) {
+                    activeInput.value = modelX.toFixed(2);
+                } else if (activeInput.id.includes('-y')) {
+                    activeInput.value = modelY.toFixed(2);
+                }
+            }
         }
     });
     
@@ -864,11 +950,45 @@ function visualizeModel() {
 // 预览梁的几何图形
 function previewBeam() {
     try {
-        // 获取输入的梁起点和终点坐标
+        // 检查是否已经存在梁
+        const existingBeams = mechanicsObjects.filter(obj => obj.type === 'beam');
+        if (existingBeams.length > 0) {
+            throw new Error('目前只允许有一个梁的存在');
+        }
+        
+        // 获取输入的梁长度和方向
+        const length = parseExpression(document.getElementById('beam-length').value);
+        const direction = document.getElementById('beam-direction').value;
+        
+        // 获取梁的起点坐标
         const startX = parseExpression(document.getElementById('beam-start-x').value);
         const startY = parseExpression(document.getElementById('beam-start-y').value);
-        const endX = parseExpression(document.getElementById('beam-end-x').value);
-        const endY = parseExpression(document.getElementById('beam-end-y').value);
+        let endX, endY;
+        
+        switch (direction) {
+            case '+X':
+                endX = startX + length;
+                endY = startY;
+                break;
+            case '-X':
+                endX = startX - length;
+                endY = startY;
+                break;
+            case '+Y':
+                endX = startX;
+                endY = startY + length;
+                break;
+            case '-Y':
+                endX = startX;
+                endY = startY - length;
+                break;
+            default:
+                throw new Error('无效的梁方向');
+        }
+        
+        // 确定梁的方向类型
+        const isHorizontal = direction === '+X' || direction === '-X';
+        const isVertical = direction === '+Y' || direction === '-Y';
         
         // 获取可视化区域
         const visualizationDiv = document.getElementById('visualization');
@@ -946,8 +1066,16 @@ function previewBeam() {
         const logDiv = document.getElementById('log');
         logDiv.innerHTML = '<h5>【操作日志】</h5>';
         logDiv.innerHTML += `<p>梁添加成功！</p>`;
+        logDiv.innerHTML += `<p>长度：${length} ${globalUnits.length}</p>`;
+        logDiv.innerHTML += `<p>方向：${direction}</p>`;
         logDiv.innerHTML += `<p>起点：(${startX.toFixed(2)}, ${startY.toFixed(2)})</p>`;
         logDiv.innerHTML += `<p>终点：(${endX.toFixed(2)}, ${endY.toFixed(2)})</p>`;
+        
+        // 清空输入字段
+        document.getElementById('beam-length').value = '1';
+        document.getElementById('beam-start-x').value = '0';
+        document.getElementById('beam-start-y').value = '0';
+        setBeamDirection('+X');
         
         // 切换到日志标签页
         const logTab = new bootstrap.Tab(document.getElementById('log-tab'));
@@ -996,7 +1124,6 @@ function displayObjects() {
     const forces = mechanicsObjects.filter(obj => obj.type === 'outerforce');
     const moments = mechanicsObjects.filter(obj => obj.type === 'outertorque');
     const distributedForces = mechanicsObjects.filter(obj => obj.type === 'fenbuforce');
-    const distributedMoments = mechanicsObjects.filter(obj => obj.type === 'fenbutorque');
     const fixedHinges = mechanicsObjects.filter(obj => obj.type === 'gdjzz');
     const slidingHinges = mechanicsObjects.filter(obj => obj.type === 'hdjzz');
     const fixedSupports = mechanicsObjects.filter(obj => obj.type === 'gdzz');
@@ -1008,7 +1135,6 @@ function displayObjects() {
     console.log('Forces:', forces.length);
     console.log('Moments:', moments.length);
     console.log('Distributed forces:', distributedForces.length);
-    console.log('Distributed moments:', distributedMoments.length);
     console.log('Fixed hinges:', fixedHinges.length);
     console.log('Sliding hinges:', slidingHinges.length);
     console.log('Fixed supports:', fixedSupports.length);
@@ -1025,12 +1151,14 @@ function displayObjects() {
             beams.forEach((beam, index) => {
                 const beamElement = document.createElement('div');
                 beamElement.className = 'card mb-2';
+                beamElement.style.cursor = 'pointer';
                 beamElement.innerHTML = `
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <p class="mb-0">起点: (${beam.start[0].toFixed(3)}, ${beam.start[1].toFixed(3)}) ${beam.lengthUnit}, 终点: (${beam.end[0].toFixed(3)}, ${beam.end[1].toFixed(3)}) ${beam.lengthUnit}</p>
-                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(beam)})">删除</button>
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteObject(${mechanicsObjects.indexOf(beam)})">删除</button>
                     </div>
                 `;
+                beamElement.addEventListener('click', () => editObject(beam));
                 beamsSection.appendChild(beamElement);
             });
             
@@ -1047,12 +1175,14 @@ function displayObjects() {
             forces.forEach((force, index) => {
                 const forceElement = document.createElement('div');
                 forceElement.className = 'card mb-2';
+                forceElement.style.cursor = 'pointer';
                 forceElement.innerHTML = `
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <p class="mb-0">值: ${force.originalValue || force.value} ${force.unit}, 作用点: (${force.place[0].toFixed(3)}, ${force.place[1].toFixed(3)}) ${force.lengthUnit}, 方向: (${force.direc[0]}, ${force.direc[1]})</p>
-                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(force)})">删除</button>
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteObject(${mechanicsObjects.indexOf(force)})">删除</button>
                     </div>
                 `;
+                forceElement.addEventListener('click', () => editObject(force));
                 forcesSection.appendChild(forceElement);
             });
             
@@ -1068,12 +1198,14 @@ function displayObjects() {
             moments.forEach((moment, index) => {
                 const momentElement = document.createElement('div');
                 momentElement.className = 'card mb-2';
+                momentElement.style.cursor = 'pointer';
                 momentElement.innerHTML = `
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <p class="mb-0">值: ${moment.originalValue || moment.value} ${moment.unit}, 作用点: (${moment.place[0].toFixed(3)}, ${moment.place[1].toFixed(3)}) ${moment.lengthUnit}</p>
-                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(moment)})">删除</button>
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteObject(${mechanicsObjects.indexOf(moment)})">删除</button>
                     </div>
                 `;
+                momentElement.addEventListener('click', () => editObject(moment));
                 momentsSection.appendChild(momentElement);
             });
             
@@ -1089,38 +1221,21 @@ function displayObjects() {
             distributedForces.forEach((force, index) => {
                 const forceElement = document.createElement('div');
                 forceElement.className = 'card mb-2';
+                forceElement.style.cursor = 'pointer';
                 forceElement.innerHTML = `
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <p class="mb-0">集度: ${force.originalQ || force.q} ${force.unit}, 起点: (${force.start[0].toFixed(3)}, ${force.start[1].toFixed(3)}) ${force.lengthUnit}, 终点: (${force.end[0].toFixed(3)}, ${force.end[1].toFixed(3)}) ${force.lengthUnit}, 方向: (${force.direc[0]}, ${force.direc[1]})</p>
-                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(force)})">删除</button>
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteObject(${mechanicsObjects.indexOf(force)})">删除</button>
                     </div>
                 `;
+                forceElement.addEventListener('click', () => editObject(force));
                 distributedForcesSection.appendChild(forceElement);
             });
             
             objectsList.appendChild(distributedForcesSection);
         }
         
-        // 显示分布力矩
-        if (distributedMoments.length > 0) {
-            const distributedMomentsSection = document.createElement('div');
-            distributedMomentsSection.className = 'mb-4';
-            distributedMomentsSection.innerHTML = `<h6>分布力矩 (${distributedMoments.length}个)</h6>`;
-            
-            distributedMoments.forEach((moment, index) => {
-                const momentElement = document.createElement('div');
-                momentElement.className = 'card mb-2';
-                momentElement.innerHTML = `
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <p class="mb-0">力矩集度: ${moment.originalM || moment.m} ${moment.unit}, 起点: (${moment.start[0].toFixed(3)}, ${moment.start[1].toFixed(3)}) ${moment.lengthUnit}, 终点: (${moment.end[0].toFixed(3)}, ${moment.end[1].toFixed(3)}) ${moment.lengthUnit}</p>
-                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(moment)})">删除</button>
-                    </div>
-                `;
-                distributedMomentsSection.appendChild(momentElement);
-            });
-            
-            objectsList.appendChild(distributedMomentsSection);
-        }
+
     } else if (activeTabId === 'constraint') {
         // 显示约束相关对象
         // 显示固定铰
@@ -1132,12 +1247,14 @@ function displayObjects() {
             fixedHinges.forEach((hinge, index) => {
                 const hingeElement = document.createElement('div');
                 hingeElement.className = 'card mb-2';
+                hingeElement.style.cursor = 'pointer';
                 hingeElement.innerHTML = `
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <p class="mb-0">位置: (${hinge.place[0].toFixed(3)}, ${hinge.place[1].toFixed(3)}) ${hinge.lengthUnit}</p>
-                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(hinge)})">删除</button>
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteObject(${mechanicsObjects.indexOf(hinge)})">删除</button>
                     </div>
                 `;
+                hingeElement.addEventListener('click', () => editObject(hinge));
                 fixedHingesSection.appendChild(hingeElement);
             });
             
@@ -1153,12 +1270,14 @@ function displayObjects() {
             slidingHinges.forEach((hinge, index) => {
                 const hingeElement = document.createElement('div');
                 hingeElement.className = 'card mb-2';
+                hingeElement.style.cursor = 'pointer';
                 hingeElement.innerHTML = `
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <p class="mb-0">位置: (${hinge.place[0].toFixed(3)}, ${hinge.place[1].toFixed(3)}) ${hinge.lengthUnit}, 方向: (${hinge.direc[0]}, ${hinge.direc[1]})</p>
-                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(hinge)})">删除</button>
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteObject(${mechanicsObjects.indexOf(hinge)})">删除</button>
                     </div>
                 `;
+                hingeElement.addEventListener('click', () => editObject(hinge));
                 slidingHingesSection.appendChild(hingeElement);
             });
             
@@ -1174,12 +1293,14 @@ function displayObjects() {
             fixedSupports.forEach((support, index) => {
                 const supportElement = document.createElement('div');
                 supportElement.className = 'card mb-2';
+                supportElement.style.cursor = 'pointer';
                 supportElement.innerHTML = `
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <p class="mb-0">位置: (${support.place[0].toFixed(3)}, ${support.place[1].toFixed(3)}) ${support.lengthUnit}</p>
-                        <button class="btn btn-sm btn-danger" onclick="deleteObject(${mechanicsObjects.indexOf(support)})">删除</button>
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteObject(${mechanicsObjects.indexOf(support)})">删除</button>
                     </div>
                 `;
+                supportElement.addEventListener('click', () => editObject(support));
                 fixedSupportsSection.appendChild(supportElement);
             });
             
@@ -1187,6 +1308,269 @@ function displayObjects() {
         }
     }
     
+}
+
+// 编辑对象
+function editObject(obj) {
+    let content = '';
+    let title = '';
+    
+    switch (obj.type) {
+        case 'beam':
+            title = '编辑梁';
+            content = `
+                <div class="mb-3">
+                    <label class="form-label">起点X坐标:</label>
+                    <input type="text" id="edit-beam-start-x" class="form-control" value="${obj.start[0]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">起点Y坐标:</label>
+                    <input type="text" id="edit-beam-start-y" class="form-control" value="${obj.start[1]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">终点X坐标:</label>
+                    <input type="text" id="edit-beam-end-x" class="form-control" value="${obj.end[0]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">终点Y坐标:</label>
+                    <input type="text" id="edit-beam-end-y" class="form-control" value="${obj.end[1]}">
+                </div>
+            `;
+            break;
+        case 'outerforce':
+            title = '编辑集中力';
+            content = `
+                <div class="mb-3">
+                    <label class="form-label">力的大小:</label>
+                    <input type="text" id="edit-force-value" class="form-control" value="${obj.originalValue || obj.value}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">作用点X坐标:</label>
+                    <input type="text" id="edit-force-place-x" class="form-control" value="${obj.place[0]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">作用点Y坐标:</label>
+                    <input type="text" id="edit-force-place-y" class="form-control" value="${obj.place[1]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">方向X分量:</label>
+                    <input type="text" id="edit-force-direction-x" class="form-control" value="${obj.direc[0]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">方向Y分量:</label>
+                    <input type="text" id="edit-force-direction-y" class="form-control" value="${obj.direc[1]}">
+                </div>
+            `;
+            break;
+        case 'outertorque':
+            title = '编辑集中力矩';
+            content = `
+                <div class="mb-3">
+                    <label class="form-label">力矩大小:</label>
+                    <input type="text" id="edit-moment-value" class="form-control" value="${obj.originalValue || obj.value}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">作用点X坐标:</label>
+                    <input type="text" id="edit-moment-place-x" class="form-control" value="${obj.place[0]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">作用点Y坐标:</label>
+                    <input type="text" id="edit-moment-place-y" class="form-control" value="${obj.place[1]}">
+                </div>
+            `;
+            break;
+        case 'fenbuforce':
+            title = '编辑分布力';
+            content = `
+                <div class="mb-3">
+                    <label class="form-label">集度:</label>
+                    <input type="text" id="edit-distributed-force-value" class="form-control" value="${obj.originalQ || obj.q}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">起点X坐标:</label>
+                    <input type="text" id="edit-distributed-force-start-x" class="form-control" value="${obj.start[0]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">起点Y坐标:</label>
+                    <input type="text" id="edit-distributed-force-start-y" class="form-control" value="${obj.start[1]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">终点X坐标:</label>
+                    <input type="text" id="edit-distributed-force-end-x" class="form-control" value="${obj.end[0]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">终点Y坐标:</label>
+                    <input type="text" id="edit-distributed-force-end-y" class="form-control" value="${obj.end[1]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">方向X分量:</label>
+                    <input type="text" id="edit-distributed-force-direction-x" class="form-control" value="${obj.direc[0]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">方向Y分量:</label>
+                    <input type="text" id="edit-distributed-force-direction-y" class="form-control" value="${obj.direc[1]}">
+                </div>
+            `;
+            break;
+        case 'gdjzz':
+            title = '编辑固定铰';
+            content = `
+                <div class="mb-3">
+                    <label class="form-label">位置X坐标:</label>
+                    <input type="text" id="edit-fixed-hinge-position-x" class="form-control" value="${obj.place[0]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">位置Y坐标:</label>
+                    <input type="text" id="edit-fixed-hinge-position-y" class="form-control" value="${obj.place[1]}">
+                </div>
+            `;
+            break;
+        case 'hdjzz':
+            title = '编辑滑动铰';
+            content = `
+                <div class="mb-3">
+                    <label class="form-label">位置X坐标:</label>
+                    <input type="text" id="edit-sliding-hinge-position-x" class="form-control" value="${obj.place[0]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">位置Y坐标:</label>
+                    <input type="text" id="edit-sliding-hinge-position-y" class="form-control" value="${obj.place[1]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">方向X分量:</label>
+                    <input type="text" id="edit-sliding-hinge-direction-x" class="form-control" value="${obj.direc[0]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">方向Y分量:</label>
+                    <input type="text" id="edit-sliding-hinge-direction-y" class="form-control" value="${obj.direc[1]}">
+                </div>
+            `;
+            break;
+        case 'gdzz':
+            title = '编辑固定支座';
+            content = `
+                <div class="mb-3">
+                    <label class="form-label">位置X坐标:</label>
+                    <input type="text" id="edit-fixed-position-x" class="form-control" value="${obj.place[0]}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">位置Y坐标:</label>
+                    <input type="text" id="edit-fixed-position-y" class="form-control" value="${obj.place[1]}">
+                </div>
+            `;
+            break;
+    }
+    
+    const modalHtml = `
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">${title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${content}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary" onclick="saveObjectEdit(${mechanicsObjects.indexOf(obj)})">保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    editModal.show();
+    
+    document.getElementById('editModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
+
+// 保存对象编辑
+function saveObjectEdit(index) {
+    const obj = mechanicsObjects[index];
+    
+    try {
+        switch (obj.type) {
+            case 'beam':
+                obj.start[0] = parseExpression(document.getElementById('edit-beam-start-x').value);
+                obj.start[1] = parseExpression(document.getElementById('edit-beam-start-y').value);
+                obj.end[0] = parseExpression(document.getElementById('edit-beam-end-x').value);
+                obj.end[1] = parseExpression(document.getElementById('edit-beam-end-y').value);
+                break;
+            case 'outerforce':
+                const newForceValue = parseExpression(document.getElementById('edit-force-value').value);
+                obj.originalValue = newForceValue;
+                obj.value = convertForceUnit(newForceValue, obj.unit);
+                obj.place[0] = parseExpression(document.getElementById('edit-force-place-x').value);
+                obj.place[1] = parseExpression(document.getElementById('edit-force-place-y').value);
+                const newForceDirX = parseExpression(document.getElementById('edit-force-direction-x').value);
+                const newForceDirY = parseExpression(document.getElementById('edit-force-direction-y').value);
+                const forceMagnitude = Math.sqrt(newForceDirX * newForceDirX + newForceDirY * newForceDirY);
+                if (forceMagnitude === 0) {
+                    throw new Error('方向向量不能为零');
+                }
+                obj.direc[0] = newForceDirX / forceMagnitude;
+                obj.direc[1] = newForceDirY / forceMagnitude;
+                break;
+            case 'outertorque':
+                const newMomentValue = parseExpression(document.getElementById('edit-moment-value').value);
+                obj.originalValue = newMomentValue;
+                obj.value = convertTorqueUnit(newMomentValue, obj.unit);
+                obj.place[0] = parseExpression(document.getElementById('edit-moment-place-x').value);
+                obj.place[1] = parseExpression(document.getElementById('edit-moment-place-y').value);
+                break;
+            case 'fenbuforce':
+                const newQ = parseExpression(document.getElementById('edit-distributed-force-value').value);
+                obj.originalQ = newQ;
+                obj.q = convertForceUnit(newQ, obj.unit);
+                obj.start[0] = parseExpression(document.getElementById('edit-distributed-force-start-x').value);
+                obj.start[1] = parseExpression(document.getElementById('edit-distributed-force-start-y').value);
+                obj.end[0] = parseExpression(document.getElementById('edit-distributed-force-end-x').value);
+                obj.end[1] = parseExpression(document.getElementById('edit-distributed-force-end-y').value);
+                const newDistDirX = parseExpression(document.getElementById('edit-distributed-force-direction-x').value);
+                const newDistDirY = parseExpression(document.getElementById('edit-distributed-force-direction-y').value);
+                const distMagnitude = Math.sqrt(newDistDirX * newDistDirX + newDistDirY * newDistDirY);
+                if (distMagnitude === 0) {
+                    throw new Error('方向向量不能为零');
+                }
+                obj.direc[0] = newDistDirX / distMagnitude;
+                obj.direc[1] = newDistDirY / distMagnitude;
+                break;
+            case 'gdjzz':
+                obj.place[0] = parseExpression(document.getElementById('edit-fixed-hinge-position-x').value);
+                obj.place[1] = parseExpression(document.getElementById('edit-fixed-hinge-position-y').value);
+                break;
+            case 'hdjzz':
+                obj.place[0] = parseExpression(document.getElementById('edit-sliding-hinge-position-x').value);
+                obj.place[1] = parseExpression(document.getElementById('edit-sliding-hinge-position-y').value);
+                const newHingeDirX = parseExpression(document.getElementById('edit-sliding-hinge-direction-x').value);
+                const newHingeDirY = parseExpression(document.getElementById('edit-sliding-hinge-direction-y').value);
+                const hingeMagnitude = Math.sqrt(newHingeDirX * newHingeDirX + newHingeDirY * newHingeDirY);
+                if (hingeMagnitude === 0) {
+                    throw new Error('方向向量不能为零');
+                }
+                obj.direc[0] = newHingeDirX / hingeMagnitude;
+                obj.direc[1] = newHingeDirY / hingeMagnitude;
+                break;
+            case 'gdzz':
+                obj.place[0] = parseExpression(document.getElementById('edit-fixed-position-x').value);
+                obj.place[1] = parseExpression(document.getElementById('edit-fixed-position-y').value);
+                break;
+        }
+        
+        displayObjects();
+        updateVisualization();
+        
+        const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+        editModal.hide();
+    } catch (e) {
+        alert('编辑错误：' + e.message);
+    }
 }
 
 // 删除对象

@@ -74,6 +74,28 @@
                         <div class="tab-pane fade" id="geometry">
                             <h4>几何</h4>
                             <div class="mb-3">
+                                <label for="beam-length" class="form-label">梁长度:</label>
+                                <input type="text" id="beam-length" class="form-control" placeholder="例如: 1 或 2*5" value="1">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">梁方向:</label>
+                                <div class="row mb-2">
+                                    <div class="col-md-3">
+                                        <button class="btn btn-secondary w-100 beam-direction-btn" data-direction="+X" onclick="setBeamDirection('+X')">+X</button>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-secondary w-100 beam-direction-btn" data-direction="-X" onclick="setBeamDirection('-X')">-X</button>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-secondary w-100 beam-direction-btn" data-direction="+Y" onclick="setBeamDirection('+Y')">+Y</button>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-secondary w-100 beam-direction-btn" data-direction="-Y" onclick="setBeamDirection('-Y')">-Y</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="beam-direction" value="+X">
+                            </div>
+                            <div class="mb-3">
                                 <label for="beam-start" class="form-label">梁起点坐标:</label>
                                 <div class="row">
                                     <div class="col-md-6">
@@ -81,17 +103,6 @@
                                     </div>
                                     <div class="col-md-6">
                                         <input type="text" id="beam-start-y" class="form-control" placeholder="Y坐标" value="0">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="beam-end" class="form-label">梁终点坐标:</label>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <input type="text" id="beam-end-x" class="form-control" placeholder="X坐标" value="1">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <input type="text" id="beam-end-y" class="form-control" placeholder="Y坐标" value="0">
                                     </div>
                                 </div>
                             </div>
@@ -110,9 +121,6 @@
                                 </li>
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link" id="distributed-force-tab" data-bs-toggle="tab" data-bs-target="#distributed-force-input" type="button" role="tab">分布力</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="distributed-moment-tab" data-bs-toggle="tab" data-bs-target="#distributed-moment-input" type="button" role="tab">分布力矩</button>
                                 </li>
                             </ul>
                             <div class="tab-content" id="forceTabsContent">
@@ -145,16 +153,16 @@
                                         <label class="form-label">方向:</label>
                                         <div class="row mb-2">
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDirection('+X')">+X</button>
+                                                <button class="btn btn-secondary w-100 direction-btn" data-type="force" data-direction="+X" onclick="setDirection('+X')">+X</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDirection('-X')">-X</button>
+                                                <button class="btn btn-secondary w-100 direction-btn" data-type="force" data-direction="-X" onclick="setDirection('-X')">-X</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDirection('+Y')">+Y</button>
+                                                <button class="btn btn-secondary w-100 direction-btn" data-type="force" data-direction="+Y" onclick="setDirection('+Y')">+Y</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDirection('-Y')">-Y</button>
+                                                <button class="btn btn-secondary w-100 direction-btn" data-type="force" data-direction="-Y" onclick="setDirection('-Y')">-Y</button>
                                             </div>
                                         </div>
                                         <div class="row">
@@ -244,75 +252,25 @@
                                         <label class="form-label">方向:</label>
                                         <div class="row mb-2">
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDirection('+X')">+X</button>
+                                                <button class="btn btn-secondary w-100 direction-btn" data-type="distributed-force" data-direction="+X" onclick="setDirection('+X')">+X</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDirection('-X')">-X</button>
+                                                <button class="btn btn-secondary w-100 direction-btn" data-type="distributed-force" data-direction="-X" onclick="setDirection('-X')">-X</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDirection('+Y')">+Y</button>
+                                                <button class="btn btn-secondary w-100 direction-btn" data-type="distributed-force" data-direction="+Y" onclick="setDirection('+Y')">+Y</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDirection('-Y')">-Y</button>
+                                                <button class="btn btn-secondary w-100 direction-btn" data-type="distributed-force" data-direction="-Y" onclick="setDirection('-Y')">-Y</button>
                                             </div>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <input type="text" id="distributed-force-direction-x" class="form-control" placeholder="X方向分量" value="0">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <input type="text" id="distributed-force-direction-y" class="form-control" placeholder="Y方向分量" value="1">
-                                            </div>
-                                        </div>
+                                        <input type="hidden" id="distributed-force-direction-x" value="0">
+                                        <input type="hidden" id="distributed-force-direction-y" value="1">
                                     </div>
                                     <button id="add-distributed-force" class="btn btn-primary" onclick="addDistributedForce()">添加分布力</button>
                                 </div>
                                 
-                                <!-- 分布力矩输入 -->
-                                <div class="tab-pane fade" id="distributed-moment-input">
-                                    <div class="mb-3">
-                                        <label for="distributed-moment-value" class="form-label">集度大小:</label>
-                                        <input type="text" id="distributed-moment-value" class="form-control" placeholder="例如: 100 或 2*50">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="distributed-moment-unit" class="form-label">单位:</label>
-                                        <select id="distributed-moment-unit" class="form-select">
-                                            <option value="N·m">N·m</option>
-                                            <option value="kN·m">kN·m</option>
-                                            <option value="MN·m">MN·m</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="distributed-moment-start" class="form-label">起点坐标:</label>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <input type="text" id="distributed-moment-start-x" class="form-control" placeholder="X坐标" value="0">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <input type="text" id="distributed-moment-start-y" class="form-control" placeholder="Y坐标" value="0">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="distributed-moment-end" class="form-label">终点坐标:</label>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <input type="text" id="distributed-moment-end-x" class="form-control" placeholder="X坐标" value="1">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <input type="text" id="distributed-moment-end-y" class="form-control" placeholder="Y坐标" value="0">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="distributed-moment-direction" class="form-label">方向:</label>
-                                        <select id="distributed-moment-direction" class="form-select">
-                                            <option value="1">顺时针</option>
-                                            <option value="-1">逆时针</option>
-                                        </select>
-                                    </div>
-                                    <button id="add-distributed-moment" class="btn btn-primary" onclick="addDistributedMoment()">添加分布力矩</button>
-                                </div>
+
                             </div>
                         </div>
                         
@@ -364,26 +322,20 @@
                                         <label class="form-label">滑动方向:</label>
                                         <div class="row mb-2">
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDirection('+X')">+X</button>
+                                                <button class="btn btn-secondary w-100 direction-btn" data-type="sliding-hinge" data-direction="+X" onclick="setDirection('+X')">+X</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDirection('-X')">-X</button>
+                                                <button class="btn btn-secondary w-100 direction-btn" data-type="sliding-hinge" data-direction="-X" onclick="setDirection('-X')">-X</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDirection('+Y')">+Y</button>
+                                                <button class="btn btn-secondary w-100 direction-btn" data-type="sliding-hinge" data-direction="+Y" onclick="setDirection('+Y')">+Y</button>
                                             </div>
                                             <div class="col-md-3">
-                                                <button class="btn btn-secondary w-100" onclick="setDirection('-Y')">-Y</button>
+                                                <button class="btn btn-secondary w-100 direction-btn" data-type="sliding-hinge" data-direction="-Y" onclick="setDirection('-Y')">-Y</button>
                                             </div>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <input type="text" id="sliding-hinge-direction-x" class="form-control" placeholder="X方向分量" value="1">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <input type="text" id="sliding-hinge-direction-y" class="form-control" placeholder="Y方向分量" value="0">
-                                            </div>
-                                        </div>
+                                        <input type="hidden" id="sliding-hinge-direction-x" value="1">
+                                        <input type="hidden" id="sliding-hinge-direction-y" value="0">
                                     </div>
                                     <button id="add-sliding-hinge" class="btn btn-primary" onclick="addSlidingHinge()">添加滑动铰</button>
                                 </div>

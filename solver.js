@@ -76,13 +76,6 @@ class Solver {
                 this.beta[0][0] -= q * length * obj.direc[0];
                 this.beta[1][0] -= q * length * obj.direc[1];
                 this.beta[2][0] -= q * length * (midX * obj.direc[1] - midY * obj.direc[0]);
-            } else if (obj.type === 'fenbutorque') {
-                // 分布力矩的处理
-                const start = obj.start;
-                const end = obj.end;
-                const length = Math.sqrt(Math.pow(end[0] - start[0], 2) + Math.pow(end[1] - start[1], 2));
-                const m = obj.m; 
-                this.beta[2][0] -= m * length;
             }
         }
         
@@ -155,7 +148,6 @@ function getObjectTypeName(type) {
         'outerforce': '外力',
         'outertorque': '外力矩',
         'fenbuforce': '分布力',
-        'fenbutorque': '分布力矩',
         'hdjzz': '滑动铰',
         'gdjzz': '固定铰',
         'gdzz': '固定支座',
@@ -191,8 +183,6 @@ function showObjectConfirmation() {
                 detail = `大小: ${obj.value}${globalUnits.moment}, 位置: (${obj.place[0]}, ${obj.place[1]})`;
             } else if (obj.type === 'fenbuforce') {
                 detail = `集度: ${obj.q}${globalUnits.force}/${globalUnits.length}, 起点: (${obj.start[0]}, ${obj.start[1]}), 终点: (${obj.end[0]}, ${obj.end[1]}), 方向: (${obj.direc[0]}, ${obj.direc[1]})`;
-            } else if (obj.type === 'fenbutorque') {
-                detail = `集度: ${obj.m}${globalUnits.moment}/${globalUnits.length}, 起点: (${obj.start[0]}, ${obj.start[1]}), 终点: (${obj.end[0]}, ${obj.end[1]})`;
             } else if (obj.type === 'beam') {
                 detail = `起点: (${obj.start[0]}, ${obj.start[1]}), 终点: (${obj.end[0]}, ${obj.end[1]})`;
             } else if (obj.type === 'gdjzz' || obj.type === 'hdjzz' || obj.type === 'gdzz') {
@@ -444,28 +434,6 @@ function calculateInternalForces(beam, mechanicsObjects, constraintForces) {
                 const x = (i / numPoints) * beamLength;
                 if (x > distanceFromStart) {
                     bendingMoments[i] -= obj.value; // 外力矩与弯矩变化方向相反
-                }
-            }
-        } else if (obj.type === 'fenbutorque') {
-            const m = obj.m;
-            const torqueStart = obj.start;
-            const torqueEnd = obj.end;
-            
-            let startDist, endDist;
-            if (isHorizontal) {
-                startDist = torqueStart[0] - startPoint[0];
-                endDist = torqueEnd[0] - startPoint[0];
-            } else {
-                startDist = torqueStart[1] - startPoint[1];
-                endDist = torqueEnd[1] - startPoint[1];
-            }
-            
-            for (let i = 0; i <= numPoints; i++) {
-                const x = (i / numPoints) * beamLength;
-                if (x > Math.min(startDist, endDist)) {
-                    const effectiveLength = Math.min(x, Math.max(startDist, endDist)) - 
-                                       Math.min(startDist, endDist);
-                    bendingMoments[i] -= m * effectiveLength; // 分布力矩与弯矩变化方向相反
                 }
             }
         }
